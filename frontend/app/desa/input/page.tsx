@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { CATEGORIES, INDICATORS } from "@/lib/data/sdgsData";
-import { Edit3, CheckCircle2, AlertCircle } from "lucide-react";
+import { Edit3, CheckCircle2, AlertCircle, ClipboardCheck, ArrowRight } from "lucide-react";
 
 export default function DesaInputPage() {
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0].id);
@@ -18,22 +19,32 @@ export default function DesaInputPage() {
     setTimeout(() => {
       setIsSubmitting(false);
       setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
+      setTimeout(() => setSuccess(false), 5000);
     }, 1000);
   };
 
   return (
     <div className="space-y-8 pb-10 max-w-6xl">
-      <div>
-        <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
-          <div className="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
-            <Edit3 className="w-6 h-6" />
-          </div>
-          Input Indikator Desa
-        </h1>
-        <p className="text-slate-500 mt-2 text-lg max-w-3xl">
-          Perbarui data riil desa Anda. Data yang diinput akan dikirim ke DPMD untuk proses verifikasi.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
+            <div className="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
+              <Edit3 className="w-6 h-6" />
+            </div>
+            Input Indikator Desa
+          </h1>
+          <p className="text-slate-500 mt-2 text-base max-w-3xl">
+            Perbarui data riil desa Anda. Data yang diinput akan dikirim ke DPMD untuk proses verifikasi sebelum memperbarui skor publik.
+          </p>
+        </div>
+
+        <Link
+          href="/desa/status"
+          className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm rounded-2xl border border-slate-200 shadow-sm transition-all self-start md:self-auto"
+        >
+          <ClipboardCheck className="w-4 h-4 text-amber-600" />
+          <span>Pantau Status Verifikasi</span>
+        </Link>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
@@ -107,9 +118,17 @@ export default function DesaInputPage() {
           </form>
 
           {success && (
-            <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-2xl flex items-center justify-center gap-2 font-medium animate-in fade-in slide-in-from-bottom-4">
-              <CheckCircle2 className="w-5 h-5" />
-              Data berhasil disimpan dan diteruskan ke DPMD!
+            <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 font-medium animate-in fade-in slide-in-from-bottom-4">
+              <div className="flex items-center gap-2 text-emerald-700">
+                <CheckCircle2 className="w-5 h-5 shrink-0" />
+                <span>Data berhasil disimpan dan masuk ke antrean verifikasi DPMD!</span>
+              </div>
+              <Link
+                href="/desa/status"
+                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm shrink-0 flex items-center gap-1"
+              >
+                Lihat Status <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           )}
         </div>

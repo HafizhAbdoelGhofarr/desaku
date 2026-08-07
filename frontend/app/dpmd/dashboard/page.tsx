@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { VILLAGES, CATEGORIES, getStatus, getStatusColor } from "@/lib/data/sdgsData";
+import { VILLAGES, getStatus, getStatusColor } from "@/lib/data/sdgsData";
 import { MapPin, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
 
 export default function DpmdDashboard() {
@@ -107,16 +108,27 @@ export default function DpmdDashboard() {
             ))}
           </div>
 
-          <button className="w-full mt-6 py-4 rounded-xl bg-slate-900 text-white font-medium hover:bg-slate-800 transition-colors">
-            Lihat Analisa Lengkap
-          </button>
+          <Link
+            href="/dpmd/recommendations"
+            className="w-full mt-6 py-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-center text-sm transition-all shadow-md block"
+          >
+            Lihat Analisa Rekomendasi AI &rarr;
+          </Link>
         </div>
       </div>
     </div>
   );
 }
 
-function MetricCard({ title, value, subtitle, icon, color }: any) {
+interface MetricCardProps {
+  title: string;
+  value: string | number;
+  subtitle: string;
+  icon: React.ReactNode;
+  color: "emerald" | "blue" | "amber" | "rose";
+}
+
+function MetricCard({ title, value, subtitle, icon, color }: MetricCardProps) {
   const colorMap: Record<string, string> = {
     emerald: "bg-emerald-50 border-emerald-100 group-hover:border-emerald-200",
     blue: "bg-blue-50 border-blue-100 group-hover:border-blue-200",

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { VILLAGES, CATEGORIES, getStatus, getStatusColor } from "@/lib/data/sdgsData";
 import { Calculator, ArrowRight, ArrowUpRight, ArrowDownRight, RefreshCcw } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, ReferenceLine } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export default function WhatIfPage() {
   const [selectedVillageId, setSelectedVillageId] = useState(VILLAGES[0].id);

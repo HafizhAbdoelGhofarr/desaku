@@ -230,3 +230,91 @@ export const AI_RECOMMENDATIONS = [
     dataWarning: null,
   },
 ];
+
+export interface CitizenReport {
+  id: string;
+  village: string;
+  kecamatan: string;
+  catId: number;
+  title: string;
+  description: string;
+  location: string;
+  author: string;
+  submittedAt: string;
+  status: "terkirim" | "ditinjau" | "ditindaklanjuti";
+  responseNote?: string;
+  upvotes: number;
+}
+
+export const CITIZEN_REPORTS: CitizenReport[] = [
+  {
+    id: "rep-1",
+    village: "Desa Sukamaju",
+    kecamatan: "Ciawi",
+    catId: 4, // Infrastruktur
+    title: "Jembatan Penghubung Dusun 2 dan Dusun 3 Rusak Terkikis Air",
+    description: "Jembatan bambu darurat sudah mulai lapuk saat musim hujan, membahayakan anak sekolah dan petani pengangkut sayur. Mohon diprioritaskan perbaikan permanen.",
+    location: "Dusun 2 RT 04 / RW 02",
+    author: "Bapak Hendra (Tokoh Warga)",
+    submittedAt: "06 Agu 2026",
+    status: "ditindaklanjuti",
+    responseNote: "Sudah dimasukkan dalam musyawarah RKPDes 2026 tahap 2 dan disurvei oleh tim DPMD.",
+    upvotes: 42,
+  },
+  {
+    id: "rep-2",
+    village: "Desa Bojong Murni",
+    kecamatan: "Caringin",
+    catId: 1, // Kesehatan
+    title: "Kekurangan Suplemen Vitamin & Alat Timbang Digital di Posyandu Melati",
+    description: "Untuk pencegahan stunting balita di RW 03, alat timbang sering eror dan persediaan PMT biskuit gizi habis sejak bulan lalu.",
+    location: "Posyandu Melati RW 03",
+    author: "Ibu Siti Fatimah (Kader Posyandu)",
+    submittedAt: "05 Agu 2026",
+    status: "ditinjau",
+    responseNote: "Pemerintah desa sedang mengoordinasikan pengadaan alat bersama Puskesmas Kecamatan.",
+    upvotes: 38,
+  },
+  {
+    id: "rep-3",
+    village: "Desa Tegalwaru",
+    kecamatan: "Ciampea",
+    catId: 3, // Ekonomi
+    title: "Usulan Pelatihan Pemasaran Digital untuk Pengrajin Keramik Lokal",
+    description: "Banyak pemuda di RW 01 memiliki potensi kerajinan tanah liat dan olahan singkong tapi kesulitan memasarkan secara online ke luar kota.",
+    location: "Sentra Kerajinan RW 01",
+    author: "Rian Pratama",
+    submittedAt: "04 Agu 2026",
+    status: "ditindaklanjuti",
+    responseNote: "Diagendakan pelatihan digital marketing bekerjasama dengan BUMDes pada bulan depan.",
+    upvotes: 27,
+  },
+  {
+    id: "rep-4",
+    village: "Desa Sukamaju",
+    kecamatan: "Ciawi",
+    catId: 6, // Lingkungan
+    title: "Tumpukan Sampah Liar di Dekat Saluran Irigasi Sawah",
+    description: "Warga luar desa sering membuang sampah kantong plastik sembarangan di pinggir jalan irigasi, menyumbat aliran air ke 15 hektar sawah.",
+    location: "Jl. Irigasi Blok Barat RT 02",
+    author: "Warga Anonim",
+    submittedAt: "02 Agu 2026",
+    status: "terkirim",
+    upvotes: 19,
+  },
+  {
+    id: "rep-5",
+    village: "Desa Gunung Bunder 1",
+    kecamatan: "Pamijahan",
+    catId: 5, // Ketahanan Bencana
+    title: "Pemasangan Rambu Jalur Evakuasi dan Talud Tebing Rawan Longsor",
+    description: "Tebing di samping jalan utama RT 05 sudah mulai retak 5 cm setelah hujan deras berturut-turut. Butuh penahan tebing sementara dan rambu peringatan.",
+    location: "Kp. Gunung Bunder Atas RT 05",
+    author: "Agus S. (Relawan Desa)",
+    submittedAt: "01 Agu 2026",
+    status: "ditindaklanjuti",
+    responseNote: "BPBD dan Tim Siaga Bencana Desa telah memasang terpal penahan dan barikade jalan.",
+    upvotes: 56,
+  },
+];
+

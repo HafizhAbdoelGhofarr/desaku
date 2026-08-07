@@ -42,13 +42,19 @@ def get_indicator_values(
     status: Optional[StatusVerifikasiEnum] = None,
     village_id: Optional[int] = None,
     db: Session = Depends(get_db),
-    current_user = Depends(require_role(["admin"]))
+    current_user = Depends(require_role(["admin", "pengelola_desa"]))
 ):
     query = db.query(IndicatorValue)
+    
+    # Pengelola desa hanya boleh melihat data desanya sendiri
+    if current_user.role.value == "pengelola_desa":
+        query = query.filter(IndicatorValue.village_id == current_user.village_id)
+    elif village_id:
+        query = query.filter(IndicatorValue.village_id == village_id)
+        
     if status:
         query = query.filter(IndicatorValue.status == status)
-    if village_id:
-        query = query.filter(IndicatorValue.village_id == village_id)
+        
     return query.all()
 
 @router.patch("/indicator-values/{id}/verify", response_model=IndicatorValueResponse)
