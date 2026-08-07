@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { type AuthUser, type Role, getSession, setSession, clearSession, mockLogin, getRoleDashboard } from "../auth";
 
@@ -14,15 +14,14 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser]       = useState<AuthUser | null>(null);
-  const [isLoading, setLoading] = useState(true);
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    if (typeof window !== "undefined") {
+      return getSession()?.user ?? null;
+    }
+    return null;
+  });
+  const [isLoading, setLoading] = useState(false);
   const router = useRouter();
-
-  useEffect(() => {
-    const session = getSession();
-    if (session) setUser(session.user);
-    setLoading(false);
-  }, []);
 
   const login = useCallback(async (role: Role) => {
     setLoading(true);

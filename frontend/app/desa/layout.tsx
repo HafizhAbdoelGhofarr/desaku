@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { LayoutDashboard, LogOut, Leaf, Edit3 } from "lucide-react";
+import { LayoutDashboard, LogOut, Leaf, Edit3, ClipboardCheck, Sparkles } from "lucide-react";
 
 export default function DesaLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -12,6 +12,8 @@ export default function DesaLayout({ children }: { children: React.ReactNode }) 
   const navItems = [
     { name: "Ringkasan", href: "/desa/summary", icon: LayoutDashboard },
     { name: "Input Indikator", href: "/desa/input", icon: Edit3 },
+    { name: "Status Verifikasi", href: "/desa/status", icon: ClipboardCheck },
+    { name: "Rekomendasi AI", href: "/desa/rekomendasi", icon: Sparkles },
   ];
 
   return (
