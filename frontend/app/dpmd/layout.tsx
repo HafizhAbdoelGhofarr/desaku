@@ -31,7 +31,7 @@ export default function DpmdLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         <div className="px-6 py-6">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Menu Admin</p>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Menu Administrator</p>
           <nav className="space-y-2">
             {navItems.map((item) => {
               const isActive = pathname.startsWith(item.href);

@@ -40,7 +40,7 @@ interface SubmissionItem {
 const INITIAL_SUBMISSIONS: SubmissionItem[] = [
   ...PENDING_VERIFICATIONS.map((pv) => ({
     ...pv,
-    notes: "Menunggu peninjauan oleh tim verifikator DPMD Kabupaten.",
+    notes: "Menunggu peninjauan oleh tim verifikator Administrator Kabupaten.",
   })),
   // Contoh data verified
   {
@@ -53,7 +53,7 @@ const INITIAL_SUBMISSIONS: SubmissionItem[] = [
     submittedBy: "Sari Wulandari (Kaur Kesra)",
     status: "verified",
     verifiedAt: "2 hari lalu",
-    verifier: "Budi Santoso (DPMD)",
+    verifier: "Budi Santoso (Admin Kabupaten)",
     notes: "Data valid terkonfirmasi dengan laporan Puskesmas Ciawi.",
   },
   {
@@ -66,7 +66,7 @@ const INITIAL_SUBMISSIONS: SubmissionItem[] = [
     submittedBy: "Sari Wulandari (Kaur Kesra)",
     status: "verified",
     verifiedAt: "4 hari lalu",
-    verifier: "Budi Santoso (DPMD)",
+    verifier: "Budi Santoso (Admin Kabupaten)",
     notes: "Sesuai data PLN Distribusi Bogor.",
   },
   {
@@ -79,7 +79,7 @@ const INITIAL_SUBMISSIONS: SubmissionItem[] = [
     submittedBy: "Sari Wulandari (Kaur Kesra)",
     status: "verified",
     verifiedAt: "6 hari lalu",
-    verifier: "Admin DPMD",
+    verifier: "Administrator Kabupaten",
     notes: "Terdaftar dalam database BUMDes Kemendesa.",
   },
   // Contoh data rejected
@@ -93,7 +93,7 @@ const INITIAL_SUBMISSIONS: SubmissionItem[] = [
     submittedBy: "Sari Wulandari (Kaur Kesra)",
     status: "rejected",
     verifiedAt: "5 hari lalu",
-    verifier: "Budi Santoso (DPMD)",
+    verifier: "Budi Santoso (Admin Kabupaten)",
     notes: "Data berbeda signifikan dengan DTKS Kemensos. Mohon lampirkan berita acara Musdes verifikasi kemiskinan.",
   },
   {
@@ -106,7 +106,7 @@ const INITIAL_SUBMISSIONS: SubmissionItem[] = [
     submittedBy: "Sekdes Budi S.",
     status: "rejected",
     verifiedAt: "3 hari lalu",
-    verifier: "Budi Santoso (DPMD)",
+    verifier: "Budi Santoso (Admin Kabupaten)",
     notes: "Survei Dinas PUPR mencatat hanya 62% jalan dalam kondisi mantap.",
   },
 ];
@@ -114,9 +114,8 @@ const INITIAL_SUBMISSIONS: SubmissionItem[] = [
 export default function DesaStatusPage() {
   const { user } = useAuth();
 
-  const defaultVillage = VILLAGES.find((v) => v.name === user?.village) || VILLAGES[0];
-  const [selectedVillageId, setSelectedVillageId] = useState(defaultVillage.id);
-  const village = VILLAGES.find((v) => v.id === selectedVillageId) || defaultVillage;
+  // Perangkat desa terikat secara single-tenant ke desanya sendiri
+  const village = VILLAGES.find((v) => v.name === user?.village) || VILLAGES[0];
 
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "verified" | "rejected">("all");
   const [catFilter, setCatFilter] = useState<number | "all">("all");
@@ -125,7 +124,6 @@ export default function DesaStatusPage() {
   // Filter list submissions
   const filteredSubmissions = useMemo(() => {
     return INITIAL_SUBMISSIONS.filter((item) => {
-      // Filter desa jika ada, atau tampilkan sesuai desa yang dipilih
       const matchVillage = item.village.toLowerCase() === village.name.toLowerCase();
       const matchStatus = statusFilter === "all" ? true : item.status === statusFilter;
       const matchCat = catFilter === "all" ? true : item.catId === catFilter;
@@ -159,31 +157,21 @@ export default function DesaStatusPage() {
               Status Verifikasi Indikator
             </h1>
             <p className="text-slate-500 mt-0.5">
-              Pantau status verifikasi dan catatan DPMD untuk setiap data indikator {village.name}.
+              Pantau status verifikasi dan catatan Administrator Kabupaten untuk setiap data indikator {village.name}.
             </p>
           </div>
         </div>
 
-        {/* Action Button & Village Selector */}
-        <div className="flex items-center gap-3 self-start md:self-auto">
-          <div className="flex items-center gap-2 bg-white px-3 py-2 rounded-2xl border border-slate-200 shadow-sm text-sm">
-            <Building2 className="w-4 h-4 text-emerald-600" />
-            <select
-              value={selectedVillageId}
-              onChange={(e) => setSelectedVillageId(e.target.value)}
-              className="bg-transparent font-bold text-slate-800 focus:outline-none cursor-pointer text-xs sm:text-sm"
-            >
-              {VILLAGES.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.name}
-                </option>
-              ))}
-            </select>
+        {/* Action Button & Locked Village Badge */}
+        <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+          <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200/90 px-3.5 py-2 rounded-2xl shadow-sm text-xs">
+            <Building2 className="w-4 h-4 text-amber-600" />
+            <span className="font-bold text-slate-900">{village.name} (Kec. {village.kecamatan})</span>
           </div>
 
           <Link
             href="/desa/input"
-            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-sm shadow-md shadow-emerald-200 transition-all"
+            className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-xs sm:text-sm shadow-md shadow-emerald-200 transition-all"
           >
             <Edit3 className="w-4 h-4" />
             <span>Input Data Baru</span>
@@ -216,7 +204,7 @@ export default function DesaStatusPage() {
           }`}
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-amber-600">Menunggu DPMD</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-600">Menunggu Verifikasi</span>
             <div className="p-1.5 bg-amber-50 rounded-lg text-amber-600">
               <Clock className="w-4 h-4" />
             </div>
@@ -268,7 +256,7 @@ export default function DesaStatusPage() {
       <div className="p-4 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl flex items-start gap-3 text-sm text-emerald-900">
         <Info className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
         <div>
-          <span className="font-bold">Mekanisme Kualitas Data:</span> Setiap nilai indikator yang dikirim akan melalui verifikasi tim DPMD sebelum dihitung ke dalam skor resmi publik. Apabila data ditolak, periksa catatan review dan kirim perbaikan melalui form input.
+          <span className="font-bold">Mekanisme Kualitas Data:</span> Setiap nilai indikator yang dikirim akan melalui verifikasi tim Administrator Kabupaten sebelum dihitung ke dalam skor resmi publik. Apabila data ditolak, periksa catatan review dan kirim perbaikan melalui form input.
         </div>
       </div>
 
@@ -348,7 +336,7 @@ export default function DesaStatusPage() {
                     </span>
                     <span>•</span>
                     <span>Oleh: <strong className="text-slate-700">{item.submittedBy}</strong></span>
-                    {item.verifiedBy && (
+                    {item.verifier && (
                       <>
                         <span>•</span>
                         <span>Diverifikasi oleh: <strong className="text-slate-700">{item.verifier}</strong></span>

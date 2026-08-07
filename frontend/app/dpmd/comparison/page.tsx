@@ -250,7 +250,7 @@ export default function ComparisonPage() {
                 Ketimpangan Tertinggi: {disparityAnalysis.category} (Selisih {disparityAnalysis.gap} Poin)
               </h3>
               <p className="text-slate-300 text-sm leading-relaxed">
-                Terdapat disparitas signifikan antara <span className="text-emerald-400 font-bold">{disparityAnalysis.highestVillage} ({disparityAnalysis.highestScore})</span> dengan <span className="text-rose-400 font-bold">{disparityAnalysis.lowestVillage} ({disparityAnalysis.lowestScore})</span>. DPMD disarankan mengalokasikan program afirmasi bantuan teknis ke wilayah yang tertinggal.
+                Terdapat disparitas signifikan antara <span className="text-emerald-400 font-bold">{disparityAnalysis.highestVillage} ({disparityAnalysis.highestScore})</span> dengan <span className="text-rose-400 font-bold">{disparityAnalysis.lowestVillage} ({disparityAnalysis.lowestScore})</span>. Administrator Kabupaten disarankan mengalokasikan program afirmasi bantuan teknis ke wilayah yang tertinggal.
               </p>
             </div>
 
@@ -369,7 +369,10 @@ export default function ComparisonPage() {
                     <td key={v.id} className="p-4 px-6 text-center">
                       <span className="text-2xl font-black text-slate-900">{v.overallScore}</span>
                       <div className="mt-1">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[11px] font-bold ${color.badge}`}>
+                        <span 
+                          className="px-2.5 py-0.5 rounded-full text-[11px] font-bold border"
+                          style={{ backgroundColor: color.bg, color: color.text, borderColor: color.border }}
+                        >
                           {getStatusLabel(status)}
                         </span>
                       </div>

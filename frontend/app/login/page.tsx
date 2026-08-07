@@ -74,8 +74,8 @@ export default function LoginPage() {
                 }`}
               >
                 <ShieldCheck className={`w-8 h-8 mb-4 ${selectedRole === "dpmd" ? "text-emerald-600" : "text-slate-400"}`} />
-                <div className={`font-semibold ${selectedRole === "dpmd" ? "text-emerald-900" : "text-slate-700"}`}>Admin DPMD</div>
-                <div className="text-xs text-slate-500 mt-1">Verifikasi & Analisa</div>
+                <div className={`font-semibold ${selectedRole === "dpmd" ? "text-emerald-900" : "text-slate-700"}`}>Administrator</div>
+                <div className="text-xs text-slate-500 mt-1">Tingkat Kabupaten</div>
               </button>
 
               <button

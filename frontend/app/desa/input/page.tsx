@@ -33,18 +33,20 @@ export default function DesaInputPage() {
             </div>
             Input Indikator Desa
           </h1>
-          <p className="text-slate-500 mt-2 text-base max-w-3xl">
-            Perbarui data riil desa Anda. Data yang diinput akan dikirim ke DPMD untuk proses verifikasi sebelum memperbarui skor publik.
+          <p className="text-slate-500 mt-2 text-sm md:text-base max-w-3xl">
+            Perbarui data riil desa Anda. Data yang diinput akan dikirim ke Administrator Kabupaten untuk proses verifikasi sebelum memperbarui skor resmi publik.
           </p>
         </div>
 
-        <Link
-          href="/desa/status"
-          className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm rounded-2xl border border-slate-200 shadow-sm transition-all self-start md:self-auto"
-        >
-          <ClipboardCheck className="w-4 h-4 text-amber-600" />
-          <span>Pantau Status Verifikasi</span>
-        </Link>
+        <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+          <Link
+            href="/desa/status"
+            className="flex items-center gap-2 px-4 py-2.5 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs sm:text-sm rounded-2xl border border-slate-200 shadow-sm transition-all"
+          >
+            <ClipboardCheck className="w-4 h-4 text-amber-600" />
+            <span>Pantau Status Verifikasi</span>
+          </Link>
+        </div>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-8">
@@ -121,7 +123,7 @@ export default function DesaInputPage() {
             <div className="mt-4 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 font-medium animate-in fade-in slide-in-from-bottom-4">
               <div className="flex items-center gap-2 text-emerald-700">
                 <CheckCircle2 className="w-5 h-5 shrink-0" />
-                <span>Data berhasil disimpan dan masuk ke antrean verifikasi DPMD!</span>
+                <span>Data berhasil disimpan dan masuk ke antrean verifikasi Administrator Kabupaten!</span>
               </div>
               <Link
                 href="/desa/status"

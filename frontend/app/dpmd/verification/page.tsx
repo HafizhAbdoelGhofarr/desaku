@@ -36,6 +36,7 @@ export default function VerificationPage() {
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedKecamatan, setSelectedKecamatan] = useState<string>("all");
   const [selectedVillage, setSelectedVillage] = useState<string>("all");
   const [selectedCat, setSelectedCat] = useState<string>("all");
 
@@ -46,27 +47,36 @@ export default function VerificationPage() {
   // Quick Approve Modal / Confirmation
   const [verifySuccessMsg, setVerifySuccessMsg] = useState<string | null>(null);
 
+  // Extract unique kecamatans
+  const kecamatans = useMemo(() => {
+    return Array.from(new Set(VILLAGES.map((v) => v.kecamatan)));
+  }, []);
+
   // Filtered Pending Data
   const filteredPending = useMemo(() => {
     return data.filter((item) => {
       const matchSearch = item.village.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           item.field.toLowerCase().includes(searchQuery.toLowerCase());
+      const itemKec = VILLAGES.find((v) => v.name === item.village)?.kecamatan;
+      const matchKec = selectedKecamatan === "all" || itemKec === selectedKecamatan;
       const matchVillage = selectedVillage === "all" || item.village === selectedVillage;
       const matchCat = selectedCat === "all" || item.catId === Number(selectedCat);
-      return matchSearch && matchVillage && matchCat;
+      return matchSearch && matchKec && matchVillage && matchCat;
     });
-  }, [data, searchQuery, selectedVillage, selectedCat]);
+  }, [data, searchQuery, selectedKecamatan, selectedVillage, selectedCat]);
 
   // Filtered History Data
   const filteredHistory = useMemo(() => {
     return history.filter((item) => {
       const matchSearch = item.village.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           item.field.toLowerCase().includes(searchQuery.toLowerCase());
+      const itemKec = VILLAGES.find((v) => v.name === item.village)?.kecamatan;
+      const matchKec = selectedKecamatan === "all" || itemKec === selectedKecamatan;
       const matchVillage = selectedVillage === "all" || item.village === selectedVillage;
       const matchCat = selectedCat === "all" || item.catId === Number(selectedCat);
-      return matchSearch && matchVillage && matchCat;
+      return matchSearch && matchKec && matchVillage && matchCat;
     });
-  }, [history, searchQuery, selectedVillage, selectedCat]);
+  }, [history, searchQuery, selectedKecamatan, selectedVillage, selectedCat]);
 
   // Actions
   const handleApprove = (item: VerificationItem) => {
@@ -198,6 +208,22 @@ export default function VerificationPage() {
 
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
             <div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-2 rounded-xl text-xs w-full sm:w-auto">
+              <span className="font-semibold text-slate-400 uppercase">Kecamatan:</span>
+              <select
+                value={selectedKecamatan}
+                onChange={(e) => setSelectedKecamatan(e.target.value)}
+                className="bg-transparent font-bold text-slate-800 focus:outline-none cursor-pointer"
+              >
+                <option value="all">Semua Kecamatan</option>
+                {kecamatans.map((kec) => (
+                  <option key={kec} value={kec}>
+                    Kec. {kec}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2 bg-white border border-slate-200 px-3 py-2 rounded-xl text-xs w-full sm:w-auto">
               <span className="font-semibold text-slate-400 uppercase">Desa:</span>
               <select
                 value={selectedVillage}
@@ -207,7 +233,7 @@ export default function VerificationPage() {
                 <option value="all">Semua Desa</option>
                 {VILLAGES.map((v) => (
                   <option key={v.id} value={v.name}>
-                    {v.name}
+                    {v.name} (Kec. {v.kecamatan})
                   </option>
                 ))}
               </select>
@@ -408,7 +434,7 @@ export default function VerificationPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                  Catatan Verifikator DPMD *
+                  Catatan Administrator Kabupaten *
                 </label>
                 <textarea
                   required

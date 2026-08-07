@@ -139,7 +139,7 @@ export default function PublikSkorPage() {
         <div className="relative z-10 max-w-3xl space-y-3">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold uppercase tracking-wider">
             <ShieldCheck className="w-4 h-4" />
-            <span>Data Terbuka & Terverifikasi DPMD</span>
+            <span>Data Terbuka & Terverifikasi Administrator</span>
           </div>
 
           <h1 className="text-3xl md:text-5xl font-black tracking-tight text-white leading-tight">
@@ -298,7 +298,10 @@ export default function PublikSkorPage() {
                         </div>
                       </div>
 
-                      <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${color.badge}`}>
+                      <span 
+                        className="px-2.5 py-1 rounded-full text-xs font-bold border"
+                        style={{ backgroundColor: color.bg, color: color.text, borderColor: color.border }}
+                      >
                         {getStatusLabel(status)}
                       </span>
                     </div>
@@ -524,7 +527,7 @@ export default function PublikSkorPage() {
                   {selectedVillage.name}
                 </h2>
                 <p className="text-xs text-emerald-200/90 mt-1">
-                  Detail capaian 8 pilar ketahanan yang telah diverifikasi resmi oleh DPMD.
+                  Detail capaian 8 pilar ketahanan yang telah diverifikasi resmi oleh Administrator Kabupaten.
                 </p>
               </div>
 
@@ -590,9 +593,12 @@ export default function PublikSkorPage() {
                 <div className="space-y-2 text-xs">
                   {INDICATORS.slice(0, 4).map((ind) => (
                     <div key={ind.id} className="flex items-center justify-between p-3 rounded-xl bg-emerald-50/50 border border-emerald-100 text-slate-700">
-                      <span className="font-medium">{ind.name}</span>
-                      <span className="font-bold text-emerald-800">
-                        {ind.targetValue} {ind.unit} (Terverifikasi DPMD)
+                      <div>
+                        <p className="font-bold text-slate-800">{ind.label}</p>
+                        <p className="text-[11px] text-slate-500">{ind.description}</p>
+                      </div>
+                      <span className="font-bold text-emerald-800 text-right shrink-0 ml-2">
+                        Satuan: {ind.unit} (Terverifikasi Admin)
                       </span>
                     </div>
                   ))}
@@ -621,7 +627,7 @@ export default function PublikSkorPage() {
               <div>
                 <h3 className="text-xl font-extrabold text-white">Sampaikan Suara Warga</h3>
                 <p className="text-xs text-emerald-200 mt-1">
-                  Kirimkan aspirasi atau laporan kondisi riil di desa Anda untuk diverifikasi tim desa & DPMD.
+                  Kirimkan aspirasi atau laporan kondisi riil di desa Anda untuk diverifikasi tim desa & Administrator Kabupaten.
                 </p>
               </div>
               <button

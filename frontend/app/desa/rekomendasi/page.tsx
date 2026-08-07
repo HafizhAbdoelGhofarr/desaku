@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { 
@@ -28,11 +27,10 @@ import {
 export default function DesaRekomendasiPage() {
   const { user } = useAuth();
 
-  const defaultVillage = VILLAGES.find((v) => v.name === user?.village) || VILLAGES[0];
-  const [selectedVillageId, setSelectedVillageId] = useState(defaultVillage.id);
-  const village = VILLAGES.find((v) => v.id === selectedVillageId) || defaultVillage;
+  // Perangkat desa terikat secara single-tenant ke desanya sendiri
+  const village = VILLAGES.find((v) => v.name === user?.village) || VILLAGES[0];
 
-  // Temukan rekomendasi AI untuk desa yang dipilih (atau fallback yang relevan)
+  // Temukan rekomendasi AI untuk desa yang login
   const currentRec = AI_RECOMMENDATIONS.find((r) => r.village === village.name) || {
     id: `rec-${village.id}`,
     village: village.name,
@@ -73,21 +71,13 @@ export default function DesaRekomendasiPage() {
           </div>
         </div>
 
-        {/* Switcher Desa Demo */}
-        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border border-slate-200 shadow-sm self-start md:self-auto">
+        {/* Locked Village Badge */}
+        <div className="inline-flex items-center gap-2.5 bg-indigo-50 border border-indigo-200/90 px-4 py-2.5 rounded-2xl shadow-sm self-start md:self-auto">
           <Building2 className="w-4 h-4 text-indigo-600" />
-          <span className="text-xs font-semibold text-slate-400 uppercase">Pilih Desa:</span>
-          <select
-            value={selectedVillageId}
-            onChange={(e) => setSelectedVillageId(e.target.value)}
-            className="bg-transparent text-sm font-bold text-slate-800 focus:outline-none cursor-pointer"
-          >
-            {VILLAGES.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.name} ({v.kecamatan})
-              </option>
-            ))}
-          </select>
+          <div>
+            <p className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600">Sasaran Khusus: Perangkat Desa</p>
+            <p className="text-xs font-black text-slate-900">{village.name} (Kec. {village.kecamatan})</p>
+          </div>
         </div>
       </div>
 
@@ -289,7 +279,7 @@ export default function DesaRekomendasiPage() {
           <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2 text-xs text-slate-500">
               <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Rekomendasi dihitung otomatis berdasarkan data terverifikasi DPMD.</span>
+              <span>Rekomendasi dihitung otomatis berdasarkan data terverifikasi Administrator Kabupaten.</span>
             </div>
 
             <div className="flex items-center gap-3">

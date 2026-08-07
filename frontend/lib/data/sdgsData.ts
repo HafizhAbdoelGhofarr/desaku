@@ -258,7 +258,7 @@ export const CITIZEN_REPORTS: CitizenReport[] = [
     author: "Bapak Hendra (Tokoh Warga)",
     submittedAt: "06 Agu 2026",
     status: "ditindaklanjuti",
-    responseNote: "Sudah dimasukkan dalam musyawarah RKPDes 2026 tahap 2 dan disurvei oleh tim DPMD.",
+    responseNote: "Sudah dimasukkan dalam musyawarah RKPDes 2026 tahap 2 dan disurvei oleh tim Administrator Kabupaten.",
     upvotes: 42,
   },
   {

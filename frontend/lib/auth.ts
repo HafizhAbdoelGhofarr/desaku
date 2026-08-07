@@ -36,7 +36,7 @@ export function getRoleDashboard(role: Role): string {
 }
 
 const MOCK_USERS: Record<Role, AuthUser> = {
-  dpmd:   { id: "u1", name: "Budi Santoso",    email: "budi@dpmd.go.id",   role: "dpmd" },
+  dpmd:   { id: "u1", name: "Budi Santoso",    email: "budi@admin.go.id",  role: "dpmd" },
   desa:   { id: "u2", name: "Sari Wulandari",  email: "sari@desa.go.id",   role: "desa", village: "Desa Sukamaju" },
   publik: { id: "u3", name: "Warga",            email: "",                  role: "publik" },
 };

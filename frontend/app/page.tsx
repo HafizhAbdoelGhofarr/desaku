@@ -37,7 +37,7 @@ export default function LandingPage() {
         </h1>
         
         <p className="mt-8 text-lg md:text-xl text-slate-600 max-w-2xl leading-relaxed">
-          Platform terpadu untuk Dinas Pemberdayaan Masyarakat dan Desa (DPMD) beserta pengelola desa dalam mengukur, memverifikasi, dan mensimulasikan indeks ketahanan desa secara transparan dan cerdas.
+          Platform terpadu bagi Administrator Kabupaten beserta Perangkat Desa dalam mengukur, memverifikasi, dan mensimulasikan indeks ketahanan desa secara transparan dan cerdas.
         </p>
 
         <div className="mt-10 flex flex-col sm:flex-row gap-4">
@@ -61,7 +61,7 @@ export default function LandingPage() {
           <FeatureCard
             icon={<ShieldCheck className="w-8 h-8 text-emerald-600" />}
             title="Transparansi & Verifikasi"
-            desc="Data ketahanan desa diverifikasi berjenjang oleh tim DPMD sebelum dipublikasikan untuk menjamin validitas."
+            desc="Data ketahanan desa diverifikasi berjenjang oleh tim Administrator Kabupaten sebelum dipublikasikan untuk menjamin validitas."
           />
           <FeatureCard
             icon={<BarChart3 className="w-8 h-8 text-blue-600" />}
