@@ -7,3 +7,6 @@ frontend/.next/
 frontend/.env.local
 frontend/next-env.d.ts
 .DS_Store
+reference/
+graphify-out/
+backend/.env

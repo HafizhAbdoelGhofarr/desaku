@@ -4,6 +4,10 @@ from sqlalchemy.orm import Session
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from datetime import datetime, timedelta
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from database import get_db
 from models import User
@@ -11,7 +15,7 @@ from schemas import UserCreate, UserResponse
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-SECRET_KEY = "SECRET_KEY"  # To be moved to env vars later
+SECRET_KEY = os.getenv("SECRET_KEY", "fallback-secret-key-do-not-use-in-prod")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
