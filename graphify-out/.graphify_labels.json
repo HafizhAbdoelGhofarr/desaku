@@ -1,0 +1,21 @@
+{
+  "0": "devDependencies",
+  "1": "dependencies",
+  "2": "compilerOptions",
+  "3": "include",
+  "4": "package.json",
+  "5": "database.py",
+  "6": "layout.tsx",
+  "7": "README.md",
+  "8": "lib",
+  "9": "AGENTS.md",
+  "10": "page.tsx",
+  "11": "eslint.config.mjs",
+  "12": "next.config.ts",
+  "13": "postcss.config.mjs",
+  "14": "models.py",
+  "15": "auth.py",
+  "16": "villages.py",
+  "17": "schemas.py",
+  "18": "CLAUDE.md"
+}

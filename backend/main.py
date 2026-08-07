@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from database import engine, Base
-from routers import villages, auth
+from routers import villages, auth, indicator_values, reports, simulation
 
 # Buat semua tabel dari models.py (setelah models.py diisi nanti)
 Base.metadata.create_all(bind=engine)
@@ -20,6 +20,9 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(villages.router)
+app.include_router(indicator_values.router)
+app.include_router(reports.router)
+app.include_router(simulation.router)
 
 @app.get("/")
 def root():

@@ -3,7 +3,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
 # Ganti username, password, dan nama db sesuai punyamu
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:PASSWORD_KAMU@localhost:5432/sistem_desa_ku"
+SQLALCHEMY_DATABASE_URL = "postgresql://postgres:hafizh abdul@localhost:5432/sistem_desa_ku"
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
