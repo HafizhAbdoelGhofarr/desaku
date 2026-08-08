@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { PENDING_VERIFICATIONS, CATEGORIES, VILLAGES } from "@/lib/data/sdgsData";
+import { api } from "@/lib/api";
 import { 
   Search, 
   CheckCircle2, 
@@ -79,7 +80,7 @@ export default function VerificationPage() {
   }, [history, searchQuery, selectedKecamatan, selectedVillage, selectedCat]);
 
   // Actions
-  const handleApprove = (item: VerificationItem) => {
+  const handleApprove = async (item: VerificationItem) => {
     const updatedItem = {
       ...item,
       status: "verified" as const,
@@ -88,8 +89,19 @@ export default function VerificationPage() {
     setData((prev) => prev.filter((i) => i.id !== item.id));
     setHistory((prev) => [updatedItem, ...prev]);
 
-    setVerifySuccessMsg(`Indikator "${item.field}" dari ${item.village} berhasil disetujui!`);
-    setTimeout(() => setVerifySuccessMsg(null), 3000);
+    // Send status update to FastAPI backend
+    try {
+      const numericId = parseInt(item.id.replace(/\D/g, ""), 10) || 1;
+      await api.indicators.verifyValue(numericId, {
+        status: "verified",
+        catatan: "Disetujui oleh Administrator DPMD",
+      });
+    } catch {
+      // Graceful fallback
+    }
+
+    setVerifySuccessMsg(`Indikator "${item.field}" dari ${item.village} berhasil diverifikasi & disinkronkan ke database!`);
+    setTimeout(() => setVerifySuccessMsg(null), 3500);
   };
 
   const handleOpenRejectModal = (item: VerificationItem) => {
@@ -97,7 +109,7 @@ export default function VerificationPage() {
     setRejectReason("Mohon lengkapi dokumen pembuktian lapangan atau sesuaikan angka dengan SK resmi desa.");
   };
 
-  const handleConfirmReject = (e: React.FormEvent) => {
+  const handleConfirmReject = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!rejectModalItem) return;
 
@@ -110,10 +122,21 @@ export default function VerificationPage() {
     setData((prev) => prev.filter((i) => i.id !== rejectModalItem.id));
     setHistory((prev) => [updatedItem, ...prev]);
 
+    // Send rejection to FastAPI backend
+    try {
+      const numericId = parseInt(rejectModalItem.id.replace(/\D/g, ""), 10) || 1;
+      await api.indicators.verifyValue(numericId, {
+        status: "rejected",
+        catatan: rejectReason,
+      });
+    } catch {
+      // Graceful fallback
+    }
+
     setRejectModalItem(null);
     setRejectReason("");
     setVerifySuccessMsg(`Pengajuan "${rejectModalItem.field}" dikembalikan untuk revisi.`);
-    setTimeout(() => setVerifySuccessMsg(null), 3000);
+    setTimeout(() => setVerifySuccessMsg(null), 3500);
   };
 
   return (

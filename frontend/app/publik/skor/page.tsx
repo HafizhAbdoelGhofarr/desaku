@@ -9,7 +9,10 @@ import {
   type CitizenReport, 
   getStatus, 
   getStatusColor, 
-  getStatusLabel 
+  getStatusLabel,
+  getProvinces,
+  getKabupatens,
+  getKecamatans
 } from "@/lib/data/sdgsData";
 import { 
   Search, 
@@ -25,7 +28,9 @@ import {
   BarChart3, 
   MessageCircle, 
   AlertCircle,
-  Map
+  Map,
+  Globe2,
+  Building
 } from "lucide-react";
 import VillageMap from "@/components/VillageMap";
 
@@ -33,8 +38,10 @@ export default function PublikSkorPage() {
   // Navigation tab
   const [activeTab, setActiveTab] = useState<"skor" | "peta" | "suara">("skor");
 
-  // Filters for Skor
+  // Regional Filters for Skor
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedProvince, setSelectedProvince] = useState<string>("all");
+  const [selectedKabupaten, setSelectedKabupaten] = useState<string>("all");
   const [selectedKecamatan, setSelectedKecamatan] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
@@ -57,29 +64,58 @@ export default function PublikSkorPage() {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
-  // Extract unique kecamatans
-  const kecamatans = useMemo(() => {
-    return Array.from(new Set(VILLAGES.map((v) => v.kecamatan)));
-  }, []);
+  // Unique Regional Lists
+  const provinces = useMemo(() => getProvinces(), []);
+  
+  const availableKabupatens = useMemo(() => {
+    return getKabupatens(selectedProvince);
+  }, [selectedProvince]);
 
-  // Filtered & Sorted Villages for leaderboard
+  const availableKecamatans = useMemo(() => {
+    return getKecamatans(selectedProvince, selectedKabupaten);
+  }, [selectedProvince, selectedKabupaten]);
+
+  // Handle Province filter change
+  const handleProvinceFilter = (prov: string) => {
+    setSelectedProvince(prov);
+    setSelectedKabupaten("all");
+    setSelectedKecamatan("all");
+  };
+
+  // Handle Kabupaten filter change
+  const handleKabupatenFilter = (kab: string) => {
+    setSelectedKabupaten(kab);
+    setSelectedKecamatan("all");
+  };
+
+  // Filtered & Sorted Villages for leaderboard & map
   const filteredVillages = useMemo(() => {
     return VILLAGES.filter((v) => {
-      const matchSearch = v.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          v.kecamatan.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchKecamatan = selectedKecamatan === "all" || v.kecamatan === selectedKecamatan;
+      const q = searchQuery.toLowerCase().trim();
+      const matchSearch = !q || 
+        v.name.toLowerCase().includes(q) || 
+        v.kecamatan.toLowerCase().includes(q) ||
+        v.kabupaten.toLowerCase().includes(q) ||
+        v.provinsi.toLowerCase().includes(q);
+
+      const matchProv = selectedProvince === "all" || v.provinsi === selectedProvince;
+      const matchKab = selectedKabupaten === "all" || v.kabupaten === selectedKabupaten;
+      const matchKec = selectedKecamatan === "all" || v.kecamatan === selectedKecamatan;
+
       const villageStatus = getStatus(v.overallScore);
       const matchStatus = selectedStatus === "all" || villageStatus === selectedStatus;
-      return matchSearch && matchKecamatan && matchStatus;
+
+      return matchSearch && matchProv && matchKab && matchKec && matchStatus;
     }).sort((a, b) => b.overallScore - a.overallScore);
-  }, [searchQuery, selectedKecamatan, selectedStatus]);
+  }, [searchQuery, selectedProvince, selectedKabupaten, selectedKecamatan, selectedStatus]);
 
   // Aggregate stats
-  const avgKabupatenScore = useMemo(() => {
-    return Math.round(VILLAGES.reduce((acc, v) => acc + v.overallScore, 0) / VILLAGES.length);
-  }, []);
+  const avgFilteredScore = useMemo(() => {
+    if (filteredVillages.length === 0) return 0;
+    return Math.round(filteredVillages.reduce((acc, v) => acc + v.overallScore, 0) / filteredVillages.length);
+  }, [filteredVillages]);
 
-  const totalVerifiedIndicators = 48; // Total indikator terverifikasi
+  const totalVerifiedIndicators = filteredVillages.length * 6;
 
   // Filtered Citizen Reports
   const filteredReports = useMemo(() => {
@@ -106,23 +142,25 @@ export default function PublikSkorPage() {
     const newReportItem: CitizenReport = {
       id: `rep-${Date.now()}`,
       village: newVillage,
-      kecamatan: matchedVillage?.kecamatan || "Kabupaten",
+      kecamatan: matchedVillage?.kecamatan || "Wilayah",
       catId: Number(newCatId),
+      category: CATEGORIES.find((c) => c.id === Number(newCatId))?.label.toLowerCase() || "umum",
       title: newTitle,
       description: newDesc,
       location: newLocation,
-      author: isAnonymous ? "Warga Anonim" : newAuthor.trim() || "Warga Setempat",
+      author: isAnonymous ? "Warga Desa (Anonim)" : newAuthor || "Warga",
       submittedAt: "Baru saja",
+      createdAt: "Baru saja",
       status: "terkirim",
       upvotes: 1,
     };
 
     setReports([newReportItem, ...reports]);
     setSubmitSuccess(true);
+
     setTimeout(() => {
       setSubmitSuccess(false);
       setIsReportModalOpen(false);
-      // Reset form
       setNewTitle("");
       setNewDesc("");
       setNewLocation("");
@@ -140,29 +178,29 @@ export default function PublikSkorPage() {
         
         <div className="relative z-10 max-w-3xl space-y-3">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-bold uppercase tracking-wider">
-            <ShieldCheck className="w-4 h-4" />
-            <span>Data Terbuka & Terverifikasi Administrator</span>
+            <Globe2 className="w-4 h-4" />
+            <span>Portal Nasional Transparansi Desa Indonesia</span>
           </div>
 
           <h1 className="text-3xl md:text-5xl font-black tracking-tight text-white leading-tight">
-            Transparansi Indeks Ketahanan & Suara Warga
+            Indeks Ketahanan Desa & Suara Warga
           </h1>
 
           <p className="text-emerald-100/90 text-sm md:text-base leading-relaxed">
-            Pantau capaian 8 pilar ketahanan desa di seluruh kabupaten dan salurkan aspirasi pembangunan langsung dari lapangan.
+            Pantau capaian 8 pilar ketahanan desa dari seluruh provinsi dan kabupaten di Indonesia serta salurkan aspirasi pembangunan langsung dari lapangan.
           </p>
         </div>
 
         {/* Global Summary Metric Cards */}
         <div className="mt-8 pt-8 border-t border-white/10 grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-            <p className="text-xs text-emerald-200 font-medium">Rata-Rata Kabupaten</p>
-            <p className="text-2xl md:text-3xl font-black text-white mt-1">{avgKabupatenScore} <span className="text-xs text-emerald-300">/ 100</span></p>
+            <p className="text-xs text-emerald-200 font-medium">Rata-Rata Skor</p>
+            <p className="text-2xl md:text-3xl font-black text-white mt-1">{avgFilteredScore} <span className="text-xs text-emerald-300">/ 100</span></p>
           </div>
 
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
             <p className="text-xs text-emerald-200 font-medium">Desa Terpantau</p>
-            <p className="text-2xl md:text-3xl font-black text-white mt-1">{VILLAGES.length} <span className="text-xs text-emerald-300">Desa</span></p>
+            <p className="text-2xl md:text-3xl font-black text-white mt-1">{filteredVillages.length} <span className="text-xs text-emerald-300">/ {VILLAGES.length} Desa</span></p>
           </div>
 
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
@@ -172,7 +210,7 @@ export default function PublikSkorPage() {
 
           <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 border border-white/10">
             <p className="text-xs text-emerald-200 font-medium">Aspirasi Warga</p>
-            <p className="text-2xl md:text-3xl font-black text-white mt-1">{reports.length} <span className="text-xs text-emerald-300">Aspirasi</span></p>
+            <p className="text-2xl md:text-3xl font-black text-white mt-1">{reports.length} <span className="text-xs text-emerald-300">Laporan</span></p>
           </div>
         </div>
       </div>
@@ -189,7 +227,7 @@ export default function PublikSkorPage() {
             }`}
           >
             <BarChart3 className="w-4 h-4" />
-            <span>Peringkat & Kartu Desa</span>
+            <span>Peringkat & Skor ({filteredVillages.length})</span>
           </button>
 
           <button
@@ -201,7 +239,7 @@ export default function PublikSkorPage() {
             }`}
           >
             <Map className="w-4 h-4" />
-            <span>Peta Spasial ({filteredVillages.length})</span>
+            <span>Peta Spasial Indonesia ({filteredVillages.length})</span>
           </button>
 
           <button
@@ -218,49 +256,122 @@ export default function PublikSkorPage() {
         </div>
 
         {/* Action Button for Suara Warga */}
-        {activeTab === "suara" && (
-          <button
-            onClick={() => setIsReportModalOpen(true)}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-sm shadow-md shadow-emerald-200 transition-all"
-          >
-            <MessageSquarePlus className="w-4 h-4" />
-            <span>Sampaikan Suara Warga</span>
-          </button>
-        )}
+        <button
+          onClick={() => setIsReportModalOpen(true)}
+          className="flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-sm transition-all shadow-md shadow-emerald-200 w-full sm:w-auto"
+        >
+          <MessageSquarePlus className="w-4 h-4" />
+          <span>Kirim Aspirasi / Laporan Warga</span>
+        </button>
       </div>
 
-      {/* TAB 2: PETA SPASIAL KETAHANAN DESA */}
-      {activeTab === "peta" && (
-        <div className="space-y-6">
-          {/* Quick Filter Bar */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2 text-sm text-slate-700">
-              <MapPin className="w-5 h-5 text-emerald-600" />
-              <span className="font-bold">Sebaran Geografis Ketahanan Desa</span>
-              <span className="text-xs text-slate-400">({filteredVillages.length} Desa Terpetakan)</span>
-            </div>
+      {/* FILTER BAR NASIONAL (PROVINSI -> KABUPATEN -> KECAMATAN -> STATUS) */}
+      {(activeTab === "skor" || activeTab === "peta") && (
+        <div className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+          
+          {/* Row 1: Search bar */}
+          <div className="relative w-full">
+            <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari nama desa, kecamatan, kabupaten, atau provinsi di Indonesia..."
+              className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all font-medium"
+            />
+          </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto">
+          {/* Row 2: Cascading Filters */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            
+            {/* Filter 1: Provinsi */}
+            <div className="bg-slate-50 border border-slate-200 p-2.5 rounded-2xl">
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                PROVINSI
+              </label>
               <select
-                value={selectedKecamatan}
-                onChange={(e) => setSelectedKecamatan(e.target.value)}
-                className="bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                value={selectedProvince}
+                onChange={(e) => handleProvinceFilter(e.target.value)}
+                className="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
               >
-                <option value="all">Semua Kecamatan</option>
-                {kecamatans.map((kec) => (
-                  <option key={kec} value={kec}>
-                    Kec. {kec}
-                  </option>
+                <option value="all">Semua Provinsi ({provinces.length})</option>
+                {provinces.map((prov) => (
+                  <option key={prov} value={prov}>{prov}</option>
                 ))}
               </select>
             </div>
+
+            {/* Filter 2: Kabupaten */}
+            <div className="bg-slate-50 border border-slate-200 p-2.5 rounded-2xl">
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                KABUPATEN / KOTA
+              </label>
+              <select
+                value={selectedKabupaten}
+                onChange={(e) => handleKabupatenFilter(e.target.value)}
+                className="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
+              >
+                <option value="all">Semua Kabupaten / Kota</option>
+                {availableKabupatens.map((kab) => (
+                  <option key={kab} value={kab}>{kab}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Filter 3: Kecamatan */}
+            <div className="bg-slate-50 border border-slate-200 p-2.5 rounded-2xl">
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                KECAMATAN
+              </label>
+              <select
+                value={selectedKecamatan}
+                onChange={(e) => setSelectedKecamatan(e.target.value)}
+                className="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
+              >
+                <option value="all">Semua Kecamatan</option>
+                {availableKecamatans.map((kec) => (
+                  <option key={kec} value={kec}>Kec. {kec}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Filter 4: Status Ketahanan */}
+            <div className="bg-slate-50 border border-slate-200 p-2.5 rounded-2xl">
+              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                STATUS KETAHANAN
+              </label>
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className="w-full bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
+              >
+                <option value="all">Semua Status</option>
+                <option value="hijau">Baik (&ge;70)</option>
+                <option value="kuning">Sedang (40-69)</option>
+                <option value="merah">Rendah (&lt;40)</option>
+              </select>
+            </div>
+
           </div>
 
+        </div>
+      )}
+
+      {/* TAB 2: PETA SPASIAL */}
+      {activeTab === "peta" && (
+        <div className="space-y-4">
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-slate-900 text-base">Sebaran Geografis Desa Terpantau</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Menampilkan {filteredVillages.length} desa berdasarkan filter wilayah administratif aktif.</p>
+              </div>
+            </div>
+
             <VillageMap
               villages={filteredVillages}
               onSelectVillage={(v) => setSelectedVillage(v)}
-              height="550px"
+              height="580px"
             />
             
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs text-slate-500">
@@ -286,53 +397,6 @@ export default function PublikSkorPage() {
       {/* TAB 1: SKOR & PERINGKAT DESA */}
       {activeTab === "skor" && (
         <div className="space-y-6">
-          {/* Search and Filters Bar */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center gap-4">
-            <div className="relative flex-1 w-full">
-              <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari nama desa atau kecamatan..."
-                className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"
-              />
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3.5 py-2.5 rounded-xl w-full sm:w-auto">
-                <Filter className="w-4 h-4 text-slate-400" />
-                <span className="text-xs font-semibold text-slate-400 uppercase">Kecamatan:</span>
-                <select
-                  value={selectedKecamatan}
-                  onChange={(e) => setSelectedKecamatan(e.target.value)}
-                  className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
-                >
-                  <option value="all">Semua Kecamatan</option>
-                  {kecamatans.map((kec) => (
-                    <option key={kec} value={kec}>
-                      {kec}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3.5 py-2.5 rounded-xl w-full sm:w-auto">
-                <span className="text-xs font-semibold text-slate-400 uppercase">Kategori:</span>
-                <select
-                  value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
-                >
-                  <option value="all">Semua Kategori</option>
-                  <option value="hijau">Baik (≥70)</option>
-                  <option value="kuning">Sedang (40-69)</option>
-                  <option value="merah">Rendah (&lt;40)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
           {/* Leaderboard Table & Cards Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {filteredVillages.map((v, index) => {
@@ -362,7 +426,11 @@ export default function PublikSkorPage() {
                           <h3 className="font-extrabold text-slate-900 text-base group-hover:text-emerald-700 transition-colors">
                             {v.name}
                           </h3>
-                          <p className="text-xs text-slate-400">Kec. {v.kecamatan}</p>
+                          <div className="flex items-center gap-1.5 text-[11px] text-slate-400 mt-0.5">
+                            <span>{v.kabupaten}</span>
+                            <span>•</span>
+                            <span>Kec. {v.kecamatan}</span>
+                          </div>
                         </div>
                       </div>
 
@@ -376,7 +444,10 @@ export default function PublikSkorPage() {
 
                     {/* Overall Score Badge */}
                     <div className="mt-4 p-4 rounded-2xl bg-slate-50 border border-slate-100 flex items-baseline justify-between">
-                      <span className="text-xs font-semibold text-slate-500">Skor Ketahanan:</span>
+                      <div>
+                        <span className="text-xs font-semibold text-slate-500 block">Skor Ketahanan:</span>
+                        <span className="text-[10px] text-emerald-700 font-semibold">{v.provinsi}</span>
+                      </div>
                       <div className="flex items-baseline gap-1">
                         <span className="text-3xl font-black text-slate-900">{v.overallScore}</span>
                         <span className="text-xs text-slate-400 font-medium">/ 100</span>
@@ -403,8 +474,8 @@ export default function PublikSkorPage() {
                                   style={{ width: `${s}%` }}
                                 />
                               </div>
-                              <p className="text-[10px] text-slate-400 font-medium truncate text-center">
-                                {cat.label.split(" ")[0]}
+                              <p className="text-[9px] text-slate-400 truncate text-center font-medium">
+                                {cat.label.slice(0, 3)}
                               </p>
                             </div>
                           );
@@ -413,10 +484,9 @@ export default function PublikSkorPage() {
                     </div>
                   </div>
 
-                  {/* Footer Action */}
-                  <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-emerald-700 group-hover:translate-x-0.5 transition-transform">
-                    <span>Lihat Detail Indikator</span>
-                    <ChevronRight className="w-4 h-4" />
+                  <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-emerald-700 font-bold group-hover:text-emerald-800">
+                    <span>Lihat Rincian Data Lengkap</span>
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </div>
               );
@@ -426,14 +496,17 @@ export default function PublikSkorPage() {
           {filteredVillages.length === 0 && (
             <div className="p-12 text-center bg-white rounded-3xl border border-slate-200 text-slate-500 space-y-3">
               <AlertCircle className="w-8 h-8 mx-auto text-slate-400" />
-              <p className="font-semibold text-slate-700">Tidak ada desa yang cocok dengan filter pencarian.</p>
+              <p className="font-semibold text-slate-700">Tidak ada data desa yang cocok dengan kriteria filter.</p>
+              <p className="text-xs text-slate-400">Silakan ubah pilihan provinsi, kabupaten, atau kata kunci pencarian Anda.</p>
               <button
                 onClick={() => {
-                  setSearchQuery("");
+                  setSelectedProvince("all");
+                  setSelectedKabupaten("all");
                   setSelectedKecamatan("all");
                   setSelectedStatus("all");
+                  setSearchQuery("");
                 }}
-                className="text-xs text-emerald-600 font-bold underline"
+                className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold"
               >
                 Reset Semua Filter
               </button>
@@ -442,13 +515,30 @@ export default function PublikSkorPage() {
         </div>
       )}
 
-      {/* TAB 2: SUARA WARGA (PARTISIPASI PUBLIK) */}
+      {/* TAB 3: SUARA WARGA */}
       {activeTab === "suara" && (
         <div className="space-y-6">
-          {/* Sub-header Suara Warga */}
-          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3.5 py-2.5 rounded-xl w-full sm:w-auto">
+          {/* Suara Warga Filters */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3.5 py-2.5 rounded-xl">
+                <Filter className="w-4 h-4 text-slate-400" />
+                <span className="text-xs font-semibold text-slate-400 uppercase">Kategori:</span>
+                <select
+                  value={selectedReportCat}
+                  onChange={(e) => setSelectedReportCat(e.target.value)}
+                  className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
+                >
+                  <option value="all">Semua Kategori Pilar</option>
+                  {CATEGORIES.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3.5 py-2.5 rounded-xl">
                 <span className="text-xs font-semibold text-slate-400 uppercase">Desa:</span>
                 <select
                   value={reportVillageFilter}
@@ -463,38 +553,22 @@ export default function PublikSkorPage() {
                   ))}
                 </select>
               </div>
-
-              <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-3.5 py-2.5 rounded-xl w-full sm:w-auto">
-                <span className="text-xs font-semibold text-slate-400 uppercase">Pilar Masalah:</span>
-                <select
-                  value={selectedReportCat}
-                  onChange={(e) => setSelectedReportCat(e.target.value)}
-                  className="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
-                >
-                  <option value="all">Semua Pilar</option>
-                  {CATEGORIES.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
 
-            <div className="text-xs text-slate-500 font-medium">
-              Menampilkan <span className="font-bold text-slate-800">{filteredReports.length}</span> laporan warga terverifikasi publik
-            </div>
+            <p className="text-xs text-slate-400 font-medium">
+              Menampilkan {filteredReports.length} laporan aspirasi masyarakat
+            </p>
           </div>
 
-          {/* List of Citizen Reports */}
+          {/* List Aspirasi Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredReports.map((report) => {
               const cat = CATEGORIES.find((c) => c.id === report.catId);
               const statusBadge =
                 report.status === "ditindaklanjuti"
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                  ? "bg-emerald-50 text-emerald-800 border-emerald-200"
                   : report.status === "ditinjau"
-                  ? "bg-amber-50 text-amber-700 border-amber-200"
+                  ? "bg-amber-50 text-amber-800 border-amber-200"
                   : "bg-slate-100 text-slate-700 border-slate-200";
 
               const statusLabel =
@@ -588,14 +662,22 @@ export default function PublikSkorPage() {
             {/* Header Modal */}
             <div className="p-6 md:p-8 bg-gradient-to-r from-emerald-800 to-slate-900 text-white flex items-start justify-between">
               <div>
-                <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-semibold text-emerald-200 border border-white/10">
-                  Kecamatan {selectedVillage.kecamatan}
-                </span>
-                <h2 className="text-2xl md:text-3xl font-extrabold text-white mt-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-semibold text-emerald-200 border border-white/10">
+                    {selectedVillage.provinsi}
+                  </span>
+                  <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-semibold text-emerald-200 border border-white/10">
+                    {selectedVillage.kabupaten}
+                  </span>
+                  <span className="px-3 py-1 bg-white/10 rounded-full text-xs font-semibold text-emerald-200 border border-white/10">
+                    Kec. {selectedVillage.kecamatan}
+                  </span>
+                </div>
+                <h2 className="text-2xl md:text-3xl font-extrabold text-white mt-3">
                   {selectedVillage.name}
                 </h2>
                 <p className="text-xs text-emerald-200/90 mt-1">
-                  Detail capaian 8 pilar ketahanan yang telah diverifikasi resmi oleh Administrator Kabupaten.
+                  Detail capaian 8 pilar ketahanan desa yang telah diverifikasi resmi oleh Administrator Pemerintah Kabupaten.
                 </p>
               </div>
 
@@ -649,54 +731,32 @@ export default function PublikSkorPage() {
                             style={{ width: `${score}%` }}
                           />
                         </div>
+                        <p className="text-[11px] text-slate-500 leading-tight">{cat.title}</p>
                       </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Verified Indicators Highlight */}
-              <div className="pt-4 border-t border-slate-100">
-                <h4 className="font-bold text-slate-900 text-base mb-3">Indikator Lapangan Kunci</h4>
-                <div className="space-y-2 text-xs">
-                  {INDICATORS.slice(0, 4).map((ind) => (
-                    <div key={ind.id} className="flex items-center justify-between p-3 rounded-xl bg-emerald-50/50 border border-emerald-100 text-slate-700">
-                      <div>
-                        <p className="font-bold text-slate-800">{ind.label}</p>
-                        <p className="text-[11px] text-slate-500">{ind.description}</p>
-                      </div>
-                      <span className="font-bold text-emerald-800 text-right shrink-0 ml-2">
-                        Satuan: {ind.unit} (Terverifikasi Admin)
-                      </span>
-                    </div>
-                  ))}
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between text-xs text-emerald-800">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <span>Data ini sinkron dengan sistem evaluasi pembangunan daerah dan diawasi oleh DPMD.</span>
                 </div>
               </div>
-            </div>
-
-            {/* Modal Footer */}
-            <div className="p-6 bg-slate-50 border-t border-slate-200 flex justify-end">
-              <button
-                onClick={() => setSelectedVillage(null)}
-                className="px-6 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm rounded-xl transition-all"
-              >
-                Tutup
-              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL: INPUT SUARA WARGA BARU */}
+      {/* NEW CITIZEN REPORT MODAL */}
       {isReportModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 overflow-hidden">
-            <div className="p-6 bg-gradient-to-r from-emerald-800 to-teal-900 text-white flex items-start justify-between">
+          <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95">
+            <div className="p-6 bg-gradient-to-r from-emerald-800 to-teal-800 text-white flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-extrabold text-white">Sampaikan Suara Warga</h3>
-                <p className="text-xs text-emerald-200 mt-1">
-                  Kirimkan aspirasi atau laporan kondisi riil di desa Anda untuk diverifikasi tim desa & Administrator Kabupaten.
-                </p>
+                <h3 className="text-xl font-extrabold text-white">Suara Warga: Salurkan Aspirasi</h3>
+                <p className="text-xs text-emerald-200 mt-0.5">Sampaikan kebutuhan atau aduan pembangunan di desa Anda.</p>
               </div>
               <button
                 onClick={() => setIsReportModalOpen(false)}
@@ -718,7 +778,7 @@ export default function PublikSkorPage() {
                 >
                   {VILLAGES.map((v) => (
                     <option key={v.id} value={v.name}>
-                      {v.name} (Kec. {v.kecamatan})
+                      {v.name} ({v.kabupaten}, Kec. {v.kecamatan})
                     </option>
                   ))}
                 </select>
@@ -750,7 +810,7 @@ export default function PublikSkorPage() {
                   required
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder="Contoh: Perbaikan Saluran Air RW 02"
+                  placeholder="Contoh: Perbaikan Saluran Irigasi Sawah Dusun 2"
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
@@ -764,71 +824,77 @@ export default function PublikSkorPage() {
                   required
                   value={newLocation}
                   onChange={(e) => setNewLocation(e.target.value)}
-                  placeholder="Contoh: Dusun 1 RT 03 / RW 01"
+                  placeholder="Contoh: Dusun 2 RT 03 / RW 01"
                   className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                  Isi Laporan & Kondisi Lapangan *
+                  Rincian Deskripsi Kebutuhan *
                 </label>
                 <textarea
                   required
-                  rows={4}
+                  rows={3}
                   value={newDesc}
                   onChange={(e) => setNewDesc(e.target.value)}
-                  placeholder="Jelaskan kendala riil di lapangan serta harapan tindak lanjut..."
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  placeholder="Jelaskan kondisi riil permasalahan dan dampaknya bagi warga sekitar..."
+                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                  Nama Pengirim
+              <div className="space-y-2">
+                <label className="block text-xs font-bold text-slate-700 uppercase">
+                  Identitas Pelapor
                 </label>
-                <input
-                  type="text"
-                  disabled={isAnonymous}
-                  value={newAuthor}
-                  onChange={(e) => setNewAuthor(e.target.value)}
-                  placeholder={isAnonymous ? "Warga Anonim" : "Nama lengkap / inisial"}
-                  className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none disabled:opacity-50"
-                />
-                <label className="flex items-center gap-2 mt-2 cursor-pointer text-xs text-slate-600">
+                
+                <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
+                    id="anon"
                     checked={isAnonymous}
                     onChange={(e) => setIsAnonymous(e.target.checked)}
-                    className="rounded text-emerald-600 focus:ring-emerald-500"
+                    className="w-4 h-4 text-emerald-600 rounded"
                   />
-                  <span>Kirim sebagai Warga Anonim (Identitas dirahasiakan)</span>
-                </label>
+                  <label htmlFor="anon" className="text-xs text-slate-600">
+                    Kirim sebagai Warga Anonim (Rahasiakan Nama)
+                  </label>
+                </div>
+
+                {!isAnonymous && (
+                  <input
+                    type="text"
+                    value={newAuthor}
+                    onChange={(e) => setNewAuthor(e.target.value)}
+                    placeholder="Nama lengkap / perwakilan warga"
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+                  />
+                )}
               </div>
 
-              {submitSuccess && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl flex items-center gap-2 text-xs font-bold">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span>Aspirasi berhasil dikirim dan masuk ke sistem!</span>
-                </div>
-              )}
-
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
+              <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsReportModalOpen(false)}
-                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold text-xs transition-colors"
+                  className="px-4 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-50"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-md shadow-emerald-200 transition-all"
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all flex items-center gap-2"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>Kirim Aspirasi</span>
+                  Kirim Aspirasi Sekarang
                 </button>
               </div>
+
+              {submitSuccess && (
+                <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center gap-2 font-medium">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  Aspirasi Anda berhasil dikirim ke portal publik & dashboard desa!
+                </div>
+              )}
             </form>
           </div>
         </div>

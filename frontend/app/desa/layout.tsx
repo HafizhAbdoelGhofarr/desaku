@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -8,6 +9,11 @@ import { LayoutDashboard, LogOut, Leaf, Edit3, ClipboardCheck, Sparkles, Trendin
 export default function DesaLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const navItems = [
     { name: "Ringkasan", href: "/desa/summary", icon: LayoutDashboard },
@@ -58,11 +64,15 @@ export default function DesaLayout({ children }: { children: React.ReactNode }) 
         <div className="mt-auto p-6 border-t border-emerald-800">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-full bg-emerald-700 flex items-center justify-center text-white font-bold">
-              {user?.name?.charAt(0) || "D"}
+              {mounted && user?.name ? user.name.charAt(0).toUpperCase() : "D"}
             </div>
             <div className="overflow-hidden">
-              <p className="text-sm font-semibold text-white truncate">{user?.name}</p>
-              <p className="text-xs text-emerald-300 truncate">{user?.village || "Perangkat Desa"}</p>
+              <p className="text-sm font-semibold text-white truncate">
+                {mounted && user?.name ? user.name : "Perangkat Desa"}
+              </p>
+              <p className="text-xs text-emerald-300 truncate">
+                {mounted && user?.village ? user.village : "Pemerintah Desa"}
+              </p>
             </div>
           </div>
           <button

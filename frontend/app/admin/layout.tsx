@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -18,6 +19,11 @@ import {
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const navItems = [
     { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
@@ -58,12 +64,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                     isActive
-                      ? "bg-emerald-600 text-white shadow-md shadow-emerald-900/20 font-bold"
-                      : "hover:bg-slate-800 hover:text-white font-medium"
+                      ? "bg-emerald-600 text-white shadow-md shadow-emerald-900/20"
+                      : "hover:bg-slate-800 hover:text-white"
                   }`}
                 >
                   <Icon className="w-5 h-5" />
-                  <span>{item.name}</span>
+                  <span className="font-medium">{item.name}</span>
                 </Link>
               );
             })}
@@ -73,11 +79,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="mt-auto p-6 border-t border-slate-800">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white font-bold">
-              {user?.name?.charAt(0) || "A"}
+              {mounted && user?.name ? user.name.charAt(0).toUpperCase() : "A"}
             </div>
             <div className="overflow-hidden">
-              <p className="text-sm font-semibold text-white truncate">{user?.name || "Administrator"}</p>
-              <p className="text-xs text-slate-500 truncate">{user?.email || "Tingkat Kabupaten"}</p>
+              <p className="text-sm font-semibold text-white truncate">
+                {mounted && user?.name ? user.name : "Administrator DPMD"}
+              </p>
+              <p className="text-xs text-slate-500 truncate">
+                {mounted && user?.email ? user.email : "admin@dpmd.go.id"}
+              </p>
             </div>
           </div>
           <button
@@ -92,10 +102,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Mobile Header */}
+        {/* Mobile Header (simplified) */}
         <header className="md:hidden h-16 bg-white border-b flex items-center justify-between px-4">
-          <div className="font-bold text-slate-900">Administrator Kabupaten</div>
-          <button onClick={logout} className="text-sm text-rose-500 font-bold">Logout</button>
+          <div className="font-bold">Sistem Desa Ku</div>
+          <button onClick={logout} className="text-sm text-rose-500">Logout</button>
         </header>
 
         {/* Scrollable Content */}

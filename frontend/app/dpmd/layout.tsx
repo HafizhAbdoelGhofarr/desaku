@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -8,6 +9,11 @@ import { LayoutDashboard, CheckSquare, LineChart, TrendingUp, LogOut, Leaf, Spar
 export default function DpmdLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const navItems = [
     { name: "Dashboard", href: "/dpmd/dashboard", icon: LayoutDashboard },
@@ -58,11 +64,15 @@ export default function DpmdLayout({ children }: { children: React.ReactNode }) 
         <div className="mt-auto p-6 border-t border-slate-800">
           <div className="flex items-center gap-3 mb-6">
             <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-white font-bold">
-              {user?.name?.charAt(0) || "A"}
+              {mounted && user?.name ? user.name.charAt(0).toUpperCase() : "A"}
             </div>
             <div className="overflow-hidden">
-              <p className="text-sm font-semibold text-white truncate">{user?.name}</p>
-              <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+              <p className="text-sm font-semibold text-white truncate">
+                {mounted && user?.name ? user.name : "Administrator DPMD"}
+              </p>
+              <p className="text-xs text-slate-500 truncate">
+                {mounted && user?.email ? user.email : "admin@dpmd.go.id"}
+              </p>
             </div>
           </div>
           <button

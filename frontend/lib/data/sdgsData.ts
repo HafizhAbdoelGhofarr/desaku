@@ -33,6 +33,8 @@ export function getStatusLabel(status: ScoreStatus) {
 export interface Village {
   id: string;
   name: string;
+  provinsi: string;
+  kabupaten: string;
   kecamatan: string;
   population: number;
   overallScore: number;
@@ -42,74 +44,267 @@ export interface Village {
   longitude: number;
 }
 
+// Data Desa Lintas Provinsi & Kabupaten Seluruh Indonesia
 // scores[0..7] → urutan 8 kategori: Kesehatan, Pendidikan, Ekonomi, Infrastruktur,
 //                                    Ketahanan Bencana, Lingkungan, Sosial, Tata Kelola
 export const VILLAGES: Village[] = [
+  // ─── JAWA BARAT - KAB. BOGOR ───────────────────────────────────────────────
   {
-    id: "v1", name: "Desa Sukamaju", kecamatan: "Ciawi", population: 3240,
+    id: "v1", name: "Desa Sukamaju", provinsi: "Jawa Barat", kabupaten: "Kab. Bogor", kecamatan: "Ciawi", population: 3240,
     overallScore: 78,
     scores: [85, 82, 75, 80, 72, 83, 76, 73],
     dataCompletion: 94,
-    latitude: -6.6582,
-    longitude: 106.8432,
+    latitude: -6.6582, longitude: 106.8432,
   },
   {
-    id: "v2", name: "Desa Cibeureum", kecamatan: "Cisarua", population: 2890,
+    id: "v2", name: "Desa Cibeureum", provinsi: "Jawa Barat", kabupaten: "Kab. Bogor", kecamatan: "Cisarua", population: 2890,
     overallScore: 54,
     scores: [58, 55, 52, 56, 48, 60, 52, 53],
     dataCompletion: 72,
-    latitude: -6.7025,
-    longitude: 106.9451,
+    latitude: -6.7025, longitude: 106.9451,
   },
   {
-    id: "v3", name: "Desa Tegalwaru", kecamatan: "Caringin", population: 4120,
+    id: "v3", name: "Desa Tegalwaru", provinsi: "Jawa Barat", kabupaten: "Kab. Bogor", kecamatan: "Caringin", population: 4120,
     overallScore: 38,
     scores: [40, 38, 35, 38, 32, 42, 38, 35],
     dataCompletion: 58,
-    latitude: -6.6854,
-    longitude: 106.8210,
+    latitude: -6.6854, longitude: 106.8210,
   },
   {
-    id: "v4", name: "Desa Pabuaran", kecamatan: "Ciawi", population: 1870,
+    id: "v4", name: "Desa Pabuaran", provinsi: "Jawa Barat", kabupaten: "Kab. Bogor", kecamatan: "Ciawi", population: 1870,
     overallScore: 67,
     scores: [72, 68, 65, 70, 60, 72, 65, 64],
     dataCompletion: 88,
-    latitude: -6.6431,
-    longitude: 106.8524,
+    latitude: -6.6431, longitude: 106.8524,
   },
   {
-    id: "v5", name: "Desa Wargajaya", kecamatan: "Sukaraja", population: 3450,
+    id: "v5", name: "Desa Wargajaya", provinsi: "Jawa Barat", kabupaten: "Kab. Bogor", kecamatan: "Sukaraja", population: 3450,
     overallScore: 82,
     scores: [88, 85, 80, 84, 76, 86, 80, 77],
     dataCompletion: 97,
-    latitude: -6.5812,
-    longitude: 106.8398,
+    latitude: -6.5812, longitude: 106.8398,
   },
   {
-    id: "v6", name: "Desa Bojong Murni", kecamatan: "Caringin", population: 2210,
+    id: "v6", name: "Desa Bojong Murni", provinsi: "Jawa Barat", kabupaten: "Kab. Bogor", kecamatan: "Caringin", population: 2210,
     overallScore: 45,
     scores: [48, 45, 42, 46, 38, 50, 44, 42],
     dataCompletion: 65,
-    latitude: -6.6987,
-    longitude: 106.8152,
+    latitude: -6.6987, longitude: 106.8152,
   },
   {
-    id: "v7", name: "Desa Ciderum", kecamatan: "Sukaraja", population: 2780,
+    id: "v7", name: "Desa Ciderum", provinsi: "Jawa Barat", kabupaten: "Kab. Bogor", kecamatan: "Sukaraja", population: 2780,
     overallScore: 61,
     scores: [65, 62, 58, 63, 55, 66, 60, 58],
     dataCompletion: 81,
-    latitude: -6.5945,
-    longitude: 106.8290,
+    latitude: -6.5945, longitude: 106.8290,
   },
   {
-    id: "v8", name: "Desa Gunung Bunder", kecamatan: "Pamijahan", population: 1950,
+    id: "v8", name: "Desa Gunung Bunder", provinsi: "Jawa Barat", kabupaten: "Kab. Bogor", kecamatan: "Pamijahan", population: 1950,
     overallScore: 29,
     scores: [32, 28, 26, 32, 24, 34, 28, 28],
     dataCompletion: 44,
-    latitude: -6.6712,
-    longitude: 106.7015,
+    latitude: -6.6712, longitude: 106.7015,
   },
+  {
+    id: "v9", name: "Desa Tugu Selatan", provinsi: "Jawa Barat", kabupaten: "Kab. Bogor", kecamatan: "Cisarua", population: 3800,
+    overallScore: 71,
+    scores: [75, 70, 72, 68, 65, 78, 70, 70],
+    dataCompletion: 89,
+    latitude: -6.7115, longitude: 106.9620,
+  },
+
+  // ─── JAWA BARAT - KAB. BANDUNG BARAT ─────────────────────────────────────────
+  {
+    id: "v10", name: "Desa Cibodas", provinsi: "Jawa Barat", kabupaten: "Kab. Bandung Barat", kecamatan: "Lembang", population: 5400,
+    overallScore: 74,
+    scores: [78, 76, 70, 75, 68, 80, 72, 73],
+    dataCompletion: 92,
+    latitude: -6.8120, longitude: 107.6410,
+  },
+  {
+    id: "v11", name: "Desa Suntenjaya", provinsi: "Jawa Barat", kabupaten: "Kab. Bandung Barat", kecamatan: "Lembang", population: 4200,
+    overallScore: 63,
+    scores: [65, 62, 60, 64, 58, 68, 62, 60],
+    dataCompletion: 83,
+    latitude: -6.8250, longitude: 107.6720,
+  },
+
+  // ─── JAWA TENGAH - KAB. BANYUMAS ─────────────────────────────────────────────
+  {
+    id: "v12", name: "Desa Kemutug Lor", provinsi: "Jawa Tengah", kabupaten: "Kab. Banyumas", kecamatan: "Baturraden", population: 4650,
+    overallScore: 81,
+    scores: [84, 82, 80, 82, 75, 86, 80, 79],
+    dataCompletion: 96,
+    latitude: -7.3320, longitude: 109.2240,
+  },
+  {
+    id: "v13", name: "Desa Karangmangu", provinsi: "Jawa Tengah", kabupaten: "Kab. Banyumas", kecamatan: "Baturraden", population: 3900,
+    overallScore: 69,
+    scores: [72, 70, 66, 71, 62, 74, 68, 66],
+    dataCompletion: 87,
+    latitude: -7.3410, longitude: 109.2190,
+  },
+  {
+    id: "v14", name: "Desa Kotayasa", provinsi: "Jawa Tengah", kabupaten: "Kab. Banyumas", kecamatan: "Sumbang", population: 5100,
+    overallScore: 56,
+    scores: [60, 58, 52, 57, 50, 62, 54, 55],
+    dataCompletion: 76,
+    latitude: -7.3620, longitude: 109.2610,
+  },
+
+  // ─── JAWA TENGAH - KAB. MAGELANG ─────────────────────────────────────────────
+  {
+    id: "v15", name: "Desa Candirejo", provinsi: "Jawa Tengah", kabupaten: "Kab. Magelang", kecamatan: "Borobudur", population: 4350,
+    overallScore: 85,
+    scores: [88, 86, 84, 86, 80, 90, 84, 82],
+    dataCompletion: 98,
+    latitude: -7.6180, longitude: 110.2210,
+  },
+  {
+    id: "v16", name: "Desa Wanurejo", provinsi: "Jawa Tengah", kabupaten: "Kab. Magelang", kecamatan: "Borobudur", population: 3750,
+    overallScore: 79,
+    scores: [82, 80, 77, 80, 74, 84, 78, 77],
+    dataCompletion: 94,
+    latitude: -7.6040, longitude: 110.2180,
+  },
+
+  // ─── JAWA TIMUR - KAB. MALANG ────────────────────────────────────────────────
+  {
+    id: "v17", name: "Desa Pujon Kidul", provinsi: "Jawa Timur", kabupaten: "Kab. Malang", kecamatan: "Pujon", population: 4100,
+    overallScore: 86,
+    scores: [90, 87, 85, 87, 82, 88, 84, 85],
+    dataCompletion: 99,
+    latitude: -7.8650, longitude: 112.4720,
+  },
+  {
+    id: "v18", name: "Desa Pandesari", provinsi: "Jawa Timur", kabupaten: "Kab. Malang", kecamatan: "Pujon", population: 5300,
+    overallScore: 66,
+    scores: [70, 68, 63, 67, 60, 72, 64, 64],
+    dataCompletion: 84,
+    latitude: -7.8520, longitude: 112.4630,
+  },
+  {
+    id: "v19", name: "Desa Ngadas", provinsi: "Jawa Timur", kabupaten: "Kab. Malang", kecamatan: "Poncokusumo", population: 2100,
+    overallScore: 60,
+    scores: [62, 59, 58, 61, 56, 68, 60, 56],
+    dataCompletion: 79,
+    latitude: -7.9940, longitude: 112.9120,
+  },
+
+  // ─── JAWA TIMUR - KAB. BANYUWANGI ───────────────────────────────────────────
+  {
+    id: "v20", name: "Desa Tamansari", provinsi: "Jawa Timur", kabupaten: "Kab. Banyuwangi", kecamatan: "Licin", population: 4900,
+    overallScore: 83,
+    scores: [86, 84, 82, 85, 78, 88, 82, 81],
+    dataCompletion: 95,
+    latitude: -8.2140, longitude: 114.2650,
+  },
+  {
+    id: "v21", name: "Desa Kemiren", provinsi: "Jawa Timur", kabupaten: "Kab. Banyuwangi", kecamatan: "Glagah", population: 3600,
+    overallScore: 76,
+    scores: [80, 78, 74, 78, 70, 82, 75, 74],
+    dataCompletion: 91,
+    latitude: -8.1980, longitude: 114.3310,
+  },
+
+  // ─── BALI - KAB. BADUNG & GIANYAR ────────────────────────────────────────────
+  {
+    id: "v22", name: "Desa Tibubeneng", provinsi: "Bali", kabupaten: "Kab. Badung", kecamatan: "Kuta Utara", population: 8900,
+    overallScore: 84,
+    scores: [87, 85, 86, 88, 76, 85, 82, 83],
+    dataCompletion: 97,
+    latitude: -8.6520, longitude: 115.1430,
+  },
+  {
+    id: "v23", name: "Desa Baha", provinsi: "Bali", kabupaten: "Kab. Badung", kecamatan: "Mengwi", population: 4500,
+    overallScore: 75,
+    scores: [78, 76, 73, 76, 70, 80, 74, 73],
+    dataCompletion: 90,
+    latitude: -8.5410, longitude: 115.1820,
+  },
+  {
+    id: "v24", name: "Desa Singakerta", provinsi: "Bali", kabupaten: "Kab. Gianyar", kecamatan: "Ubud", population: 6200,
+    overallScore: 78,
+    scores: [82, 79, 76, 80, 72, 84, 76, 75],
+    dataCompletion: 93,
+    latitude: -8.5320, longitude: 115.2530,
+  },
+
+  // ─── SUMATERA BARAT - KAB. TANAH DATAR & AGAM ────────────────────────────────
+  {
+    id: "v25", name: "Nagari Pariangan", provinsi: "Sumatera Barat", kabupaten: "Kab. Tanah Datar", kecamatan: "Pariangan", population: 4800,
+    overallScore: 80,
+    scores: [83, 81, 78, 82, 74, 85, 79, 78],
+    dataCompletion: 95,
+    latitude: -0.4430, longitude: 100.5120,
+  },
+  {
+    id: "v26", name: "Nagari Sungai Pua", provinsi: "Sumatera Barat", kabupaten: "Kab. Agam", kecamatan: "Banuhampu", population: 5600,
+    overallScore: 72,
+    scores: [75, 72, 70, 74, 66, 78, 71, 70],
+    dataCompletion: 89,
+    latitude: -0.3540, longitude: 100.4120,
+  },
+
+  // ─── SULAWESI SELATAN - KAB. GOWA & TORAJA UTARA ─────────────────────────────
+  {
+    id: "v27", name: "Desa Pattapang", provinsi: "Sulawesi Selatan", kabupaten: "Kab. Gowa", kecamatan: "Tinggimoncong", population: 3950,
+    overallScore: 68,
+    scores: [71, 69, 65, 70, 62, 74, 66, 67],
+    dataCompletion: 86,
+    latitude: -5.2540, longitude: 119.8920,
+  },
+  {
+    id: "v28", name: "Desa Kete Kesu", provinsi: "Sulawesi Selatan", kabupaten: "Kab. Toraja Utara", kecamatan: "Kesu", population: 3100,
+    overallScore: 77,
+    scores: [80, 77, 75, 79, 72, 82, 76, 75],
+    dataCompletion: 92,
+    latitude: -2.9830, longitude: 119.8970,
+  },
+
+  // ─── NUSA TENGGARA BARAT (NTB) - KAB. LOMBOK BARAT ───────────────────────────
+  {
+    id: "v29", name: "Desa Sedau", provinsi: "Nusa Tenggara Barat", kabupaten: "Kab. Lombok Barat", kecamatan: "Narmada", population: 4700,
+    overallScore: 65,
+    scores: [68, 65, 62, 66, 59, 70, 64, 63],
+    dataCompletion: 82,
+    latitude: -8.5720, longitude: 116.2150,
+  },
+  {
+    id: "v30", name: "Desa Suranadi", provinsi: "Nusa Tenggara Barat", kabupaten: "Kab. Lombok Barat", kecamatan: "Narmada", population: 5200,
+    overallScore: 73,
+    scores: [76, 74, 70, 75, 67, 80, 72, 71],
+    dataCompletion: 90,
+    latitude: -8.5610, longitude: 116.2340,
+  }
 ];
+
+// Helper Functions untuk Wilayah Administratif Lintas Indonesia
+export function getProvinces(): string[] {
+  return Array.from(new Set(VILLAGES.map((v) => v.provinsi)));
+}
+
+export function getKabupatens(provinsi?: string): string[] {
+  const list = provinsi && provinsi !== "all" 
+    ? VILLAGES.filter((v) => v.provinsi === provinsi)
+    : VILLAGES;
+  return Array.from(new Set(list.map((v) => v.kabupaten)));
+}
+
+export function getKecamatans(provinsi?: string, kabupaten?: string): string[] {
+  let list = VILLAGES;
+  if (provinsi && provinsi !== "all") list = list.filter((v) => v.provinsi === provinsi);
+  if (kabupaten && kabupaten !== "all") list = list.filter((v) => v.kabupaten === kabupaten);
+  return Array.from(new Set(list.map((v) => v.kecamatan)));
+}
+
+export function getVillagesFiltered(provinsi?: string, kabupaten?: string, kecamatan?: string): Village[] {
+  let list = VILLAGES;
+  if (provinsi && provinsi !== "all") list = list.filter((v) => v.provinsi === provinsi);
+  if (kabupaten && kabupaten !== "all") list = list.filter((v) => v.kabupaten === kabupaten);
+  if (kecamatan && kecamatan !== "all") list = list.filter((v) => v.kecamatan === kecamatan);
+  return list;
+}
 
 // ─── Indicators per category ─────────────────────────────────────────────────
 export type IndicatorUnit = "%" | "jiwa" | "unit" | "km" | "tahun" | "skor" | "rasio";
@@ -286,7 +481,7 @@ export const CITIZEN_REPORTS: CitizenReport[] = [
     village: "Desa Sukamaju",
     villageName: "Desa Sukamaju",
     kecamatan: "Ciawi",
-    catId: 4, // Infrastruktur
+    catId: 4,
     category: "infrastruktur",
     title: "Jembatan Penghubung Dusun 2 dan Dusun 3 Rusak Terkikis Air",
     description: "Jembatan bambu darurat sudah mulai lapuk saat musim hujan, membahayakan anak sekolah dan petani pengangkut sayur. Mohon diprioritaskan perbaikan permanen.",
@@ -305,7 +500,7 @@ export const CITIZEN_REPORTS: CitizenReport[] = [
     village: "Desa Bojong Murni",
     villageName: "Desa Bojong Murni",
     kecamatan: "Caringin",
-    catId: 1, // Kesehatan
+    catId: 1,
     category: "kesehatan",
     title: "Kekurangan Suplemen Vitamin & Alat Timbang Digital di Posyandu Melati",
     description: "Untuk pencegahan stunting balita di RW 03, alat timbang sering eror dan persediaan PMT biskuit gizi habis sejak bulan lalu.",
@@ -324,7 +519,7 @@ export const CITIZEN_REPORTS: CitizenReport[] = [
     village: "Desa Tegalwaru",
     villageName: "Desa Tegalwaru",
     kecamatan: "Ciampea",
-    catId: 3, // Ekonomi
+    catId: 3,
     category: "ekonomi",
     title: "Usulan Pelatihan Pemasaran Digital untuk Pengrajin Keramik Lokal",
     description: "Banyak pemuda di RW 01 memiliki potensi kerajinan tanah liat dan olahan singkong tapi kesulitan memasarkan secara online ke luar kota.",
@@ -343,7 +538,7 @@ export const CITIZEN_REPORTS: CitizenReport[] = [
     village: "Desa Sukamaju",
     villageName: "Desa Sukamaju",
     kecamatan: "Ciawi",
-    catId: 6, // Lingkungan
+    catId: 6,
     category: "lingkungan",
     title: "Tumpukan Sampah Liar di Dekat Saluran Irigasi Sawah",
     description: "Warga luar desa sering membuang sampah kantong plastik sembarangan di pinggir jalan irigasi, menyumbat aliran air ke 15 hektar sawah.",
@@ -360,7 +555,7 @@ export const CITIZEN_REPORTS: CitizenReport[] = [
     village: "Desa Gunung Bunder 1",
     villageName: "Desa Gunung Bunder 1",
     kecamatan: "Pamijahan",
-    catId: 5, // Ketahanan Bencana
+    catId: 5,
     category: "bencana",
     title: "Pemasangan Rambu Jalur Evakuasi dan Talud Tebing Rawan Longsor",
     description: "Tebing di samping jalan utama RT 05 sudah mulai retak 5 cm setelah hujan deras berturut-turut. Butuh penahan tebing sementara dan rambu peringatan.",
@@ -374,4 +569,3 @@ export const CITIZEN_REPORTS: CitizenReport[] = [
     upvotes: 56,
   },
 ];
-

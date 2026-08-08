@@ -3,24 +3,65 @@
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { VILLAGES, getStatus, getStatusColor } from "@/lib/data/sdgsData";
-import { MapPin, TrendingUp, AlertTriangle, CheckCircle2, Filter, Building2, Map, BarChart3 } from "lucide-react";
+import { 
+  VILLAGES, 
+  getStatus, 
+  getStatusColor, 
+  getProvinces, 
+  getKabupatens, 
+  getKecamatans 
+} from "@/lib/data/sdgsData";
+import { 
+  MapPin, 
+  TrendingUp, 
+  AlertTriangle, 
+  CheckCircle2, 
+  Filter, 
+  Building2, 
+  Map, 
+  BarChart3,
+  Globe2
+} from "lucide-react";
 import VillageMap from "@/components/VillageMap";
 
 export default function DpmdDashboard() {
+  const provinces = useMemo(() => getProvinces(), []);
+  const [selectedProvince, setSelectedProvince] = useState<string>("all");
+  
+  const availableKabupatens = useMemo(() => {
+    return getKabupatens(selectedProvince);
+  }, [selectedProvince]);
+  const [selectedKabupaten, setSelectedKabupaten] = useState<string>("all");
+
+  const availableKecamatans = useMemo(() => {
+    return getKecamatans(selectedProvince, selectedKabupaten);
+  }, [selectedProvince, selectedKabupaten]);
   const [selectedKecamatan, setSelectedKecamatan] = useState<string>("all");
+
   const [viewMode, setViewMode] = useState<"map" | "chart">("map");
 
-  // Extract unique kecamatans
-  const kecamatans = useMemo(() => {
-    return Array.from(new Set(VILLAGES.map((v) => v.kecamatan)));
-  }, []);
+  // Handle Province change
+  const handleProvinceChange = (prov: string) => {
+    setSelectedProvince(prov);
+    setSelectedKabupaten("all");
+    setSelectedKecamatan("all");
+  };
+
+  // Handle Kabupaten change
+  const handleKabupatenChange = (kab: string) => {
+    setSelectedKabupaten(kab);
+    setSelectedKecamatan("all");
+  };
 
   // Filtered villages
   const displayedVillages = useMemo(() => {
-    if (selectedKecamatan === "all") return VILLAGES;
-    return VILLAGES.filter((v) => v.kecamatan === selectedKecamatan);
-  }, [selectedKecamatan]);
+    return VILLAGES.filter((v) => {
+      const matchProv = selectedProvince === "all" || v.provinsi === selectedProvince;
+      const matchKab = selectedKabupaten === "all" || v.kabupaten === selectedKabupaten;
+      const matchKec = selectedKecamatan === "all" || v.kecamatan === selectedKecamatan;
+      return matchProv && matchKab && matchKec;
+    });
+  }, [selectedProvince, selectedKabupaten, selectedKecamatan]);
 
   // Aggregate metrics
   const averageScore = useMemo(() => {
@@ -28,7 +69,7 @@ export default function DpmdDashboard() {
     return Math.round(displayedVillages.reduce((acc, v) => acc + v.overallScore, 0) / displayedVillages.length);
   }, [displayedVillages]);
 
-  const pendingCount = 12;
+  const pendingCount = displayedVillages.length * 2;
   const criticalVillages = displayedVillages.filter((v) => getStatus(v.overallScore) === "merah");
 
   // Data for chart
@@ -39,6 +80,7 @@ export default function DpmdDashboard() {
         name: v.name.replace("Desa ", ""),
         fullName: v.name,
         kecamatan: v.kecamatan,
+        kabupaten: v.kabupaten,
         score: v.overallScore,
         status: getStatus(v.overallScore),
       }));
@@ -46,35 +88,72 @@ export default function DpmdDashboard() {
 
   return (
     <div className="space-y-8 pb-10 max-w-7xl mx-auto">
-      {/* Header & Kecamatan Filter Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-200/80 text-slate-700 text-xs font-bold uppercase tracking-wider mb-2">
-            <span>Wilayah Kerja: Kabupaten Bogor</span>
+      {/* Header & Regional Selector Bar */}
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-2 border border-emerald-200">
+              <Globe2 className="w-3.5 h-3.5" />
+              <span>
+                Wilayah Kerja: {selectedKabupaten !== "all" ? selectedKabupaten : selectedProvince !== "all" ? selectedProvince : "Seluruh Indonesia"}
+              </span>
+            </div>
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Dashboard Administrator Daerah</h1>
+            <p className="text-slate-500 mt-1">Pemantauan capaian 8 pilar ketahanan desa, verifikasi data, dan inferensi AI.</p>
           </div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Dashboard Administrator Kabupaten</h1>
-          <p className="text-slate-500 mt-1">Ringkasan agregat ketahanan seluruh desa dan pemantauan berbasis kecamatan.</p>
         </div>
 
-        {/* Filter Wilayah Kecamatan */}
-        <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-2xl border border-slate-200 shadow-sm self-start md:self-auto">
-          <Filter className="w-4 h-4 text-emerald-600" />
-          <span className="text-xs font-bold text-slate-500 uppercase">Filter Kecamatan:</span>
-          <select
-            value={selectedKecamatan}
-            onChange={(e) => setSelectedKecamatan(e.target.value)}
-            className="bg-transparent text-sm font-bold text-slate-800 focus:outline-none cursor-pointer"
-          >
-            <option value="all">Semua Kecamatan ({VILLAGES.length} Desa)</option>
-            {kecamatans.map((kec) => {
-              const count = VILLAGES.filter((v) => v.kecamatan === kec).length;
-              return (
-                <option key={kec} value={kec}>
-                  Kec. {kec} ({count} Desa)
-                </option>
-              );
-            })}
-          </select>
+        {/* Filter Wilayah Nasional (Provinsi -> Kabupaten -> Kecamatan) */}
+        <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-3">
+          
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+              PROVINSI
+            </label>
+            <select
+              value={selectedProvince}
+              onChange={(e) => handleProvinceChange(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+            >
+              <option value="all">Semua Provinsi ({provinces.length})</option>
+              {provinces.map((prov) => (
+                <option key={prov} value={prov}>{prov}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+              KABUPATEN / KOTA
+            </label>
+            <select
+              value={selectedKabupaten}
+              onChange={(e) => handleKabupatenChange(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+            >
+              <option value="all">Semua Kabupaten / Kota</option>
+              {availableKabupatens.map((kab) => (
+                <option key={kab} value={kab}>{kab}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+              KECAMATAN
+            </label>
+            <select
+              value={selectedKecamatan}
+              onChange={(e) => setSelectedKecamatan(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+            >
+              <option value="all">Semua Kecamatan</option>
+              {availableKecamatans.map((kec) => (
+                <option key={kec} value={kec}>Kec. {kec}</option>
+              ))}
+            </select>
+          </div>
+
         </div>
       </div>
 
@@ -83,14 +162,14 @@ export default function DpmdDashboard() {
         <MetricCard 
           title="Rata-rata Ketahanan" 
           value={`${averageScore}/100`} 
-          subtitle={selectedKecamatan === "all" ? "Seluruh Kabupaten" : `Kec. ${selectedKecamatan}`} 
+          subtitle={selectedKecamatan !== "all" ? `Kec. ${selectedKecamatan}` : selectedKabupaten !== "all" ? selectedKabupaten : "Wilayah Terpilih"} 
           icon={<TrendingUp className="w-6 h-6 text-emerald-600" />} 
           color="emerald" 
         />
         <MetricCard 
           title="Desa Terdata" 
           value={`${displayedVillages.length}`} 
-          subtitle={`Dari total ${VILLAGES.length} desa`} 
+          subtitle={`Dari total ${VILLAGES.length} desa nasional`} 
           icon={<MapPin className="w-6 h-6 text-blue-600" />} 
           color="blue" 
         />
@@ -119,9 +198,7 @@ export default function DpmdDashboard() {
                 {viewMode === "map" ? "Peta Spasial Ketahanan Desa" : "Peringkat Ketahanan Desa"}
               </h2>
               <p className="text-sm text-slate-500">
-                {selectedKecamatan === "all"
-                  ? "Sebaran 8 pilar dan tingkat ketahanan seluruh desa di Kabupaten"
-                  : `Menampilkan desa di wilayah Kecamatan ${selectedKecamatan}`}
+                Menampilkan {displayedVillages.length} desa berdasarkan filter wilayah aktif.
               </p>
             </div>
 
@@ -198,70 +275,76 @@ export default function DpmdDashboard() {
           <div>
             <h2 className="text-xl font-bold text-slate-900 mb-4">Peringatan Desa Kritis</h2>
             <p className="text-xs text-slate-400 mb-6">
-              Desa dengan skor &lt;40 yang memerlukan intervensi afirmatif segera dari Administrator.
+              Desa dengan skor &lt;40 memerlukan intervensi kebijakan darurat dan rekomendasi APBDes prioritas.
             </p>
-            
-            <div className="space-y-4">
-              {criticalVillages.map((v) => (
-                <div key={v.id} className="p-4 rounded-2xl bg-rose-50 border border-rose-100 flex gap-4 items-start">
-                  <div className="mt-1 bg-white p-2 rounded-full shadow-sm text-rose-500 shrink-0">
-                    <AlertTriangle className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-rose-900 text-sm">{v.name} (Kec. {v.kecamatan})</h4>
-                    <p className="text-xs text-rose-700 mt-1 leading-relaxed">
-                      Skor kritis ({v.overallScore}/100). Sangat tertinggal di infrastruktur & ekonomi.
-                    </p>
-                  </div>
-                </div>
-              ))}
 
-              {criticalVillages.length === 0 && (
-                <div className="p-6 text-center text-slate-400 bg-slate-50 rounded-2xl border border-slate-100">
-                  <Building2 className="w-8 h-8 mx-auto text-emerald-400 mb-2" />
-                  <p className="text-xs font-bold text-slate-700">Tidak Ada Desa Kritis</p>
-                  <p className="text-[11px] text-slate-400 mt-0.5">Semua desa di wilayah ini berada pada kategori sedang/baik.</p>
+            <div className="space-y-4">
+              {criticalVillages.length > 0 ? (
+                criticalVillages.map((v) => (
+                  <div key={v.id} className="p-4 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-between">
+                    <div>
+                      <h4 className="font-bold text-slate-900 text-sm">{v.name}</h4>
+                      <p className="text-xs text-rose-700 font-medium">Kec. {v.kecamatan} ({v.kabupaten})</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xl font-black text-rose-600">{v.overallScore}</span>
+                      <span className="text-xs text-rose-400 block font-bold">SKOR</span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-100 text-center">
+                  <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
+                  <p className="text-xs font-bold text-emerald-900">Tidak Ada Desa Kritis</p>
+                  <p className="text-[11px] text-emerald-700 mt-0.5">Semua desa di wilayah terpilih berstatus aman.</p>
                 </div>
               )}
             </div>
           </div>
 
-          <Link
-            href="/dpmd/recommendations"
-            className="w-full mt-6 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-center text-xs transition-all shadow-md block"
-          >
-            Lihat Rekomendasi Kebijakan AI &rarr;
-          </Link>
+          <div className="pt-6 mt-6 border-t border-slate-100">
+            <Link
+              href="/dpmd/verification"
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-2xl py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md"
+            >
+              <span>Verifikasi Indikator</span>
+              <span className="px-2 py-0.5 bg-rose-500 rounded-full text-[10px]">{pendingCount}</span>
+            </Link>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-interface MetricCardProps {
-  title: string;
-  value: string;
-  subtitle: string;
-  icon: React.ReactNode;
+function MetricCard({ 
+  title, 
+  value, 
+  subtitle, 
+  icon, 
+  color 
+}: { 
+  title: string; 
+  value: string; 
+  subtitle: string; 
+  icon: React.ReactNode; 
   color: "emerald" | "blue" | "amber" | "rose";
-}
-
-function MetricCard({ title, value, subtitle, icon, color }: MetricCardProps) {
-  const colorMap = {
-    emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    blue: "bg-blue-50 text-blue-600 border-blue-100",
-    amber: "bg-amber-50 text-amber-600 border-amber-100",
-    rose: "bg-rose-50 text-rose-600 border-rose-100",
+}) {
+  const bgStyles = {
+    emerald: "bg-emerald-50/80 border-emerald-100",
+    blue: "bg-blue-50/80 border-blue-100",
+    amber: "bg-amber-50/80 border-amber-100",
+    rose: "bg-rose-50/80 border-rose-100",
   };
 
   return (
-    <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex items-center justify-between">
-      <div>
-        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">{title}</p>
-        <p className="text-3xl font-black text-slate-900 mt-2">{value}</p>
-        <p className="text-xs text-slate-500 mt-1 font-medium">{subtitle}</p>
+    <div className={`p-6 rounded-3xl border bg-white shadow-sm flex items-start justify-between`}>
+      <div className="space-y-1">
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-400">{title}</p>
+        <p className="text-3xl font-black text-slate-900 tracking-tight">{value}</p>
+        <p className="text-xs text-slate-500 font-medium">{subtitle}</p>
       </div>
-      <div className={`p-4 rounded-2xl border ${colorMap[color]}`}>
+      <div className={`p-3.5 rounded-2xl border ${bgStyles[color]}`}>
         {icon}
       </div>
     </div>
