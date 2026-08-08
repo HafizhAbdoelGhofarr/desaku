@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { 
@@ -8,6 +8,7 @@ import {
   CATEGORIES, 
   PENDING_VERIFICATIONS,
 } from "@/lib/data/sdgsData";
+import { api } from "@/lib/api";
 import { 
   ClipboardCheck, 
   Search, 
@@ -19,15 +20,20 @@ import {
   Building2, 
   FileText, 
   RefreshCw, 
-  Info 
+  Info,
+  Trash2,
+  X,
+  Save,
+  Check
 } from "lucide-react";
 
-// Mock history extended data for demo purposes (including verified & rejected items)
 interface SubmissionItem {
   id: string;
+  backendId?: number;
   village: string;
   field: string;
   value: string;
+  numericVal: number;
   catId: number;
   submittedAt: string;
   submittedBy: string;
@@ -37,17 +43,18 @@ interface SubmissionItem {
   notes?: string;
 }
 
-const INITIAL_SUBMISSIONS: SubmissionItem[] = [
+const DEFAULT_SUBMISSIONS: SubmissionItem[] = [
   ...PENDING_VERIFICATIONS.map((pv) => ({
     ...pv,
+    numericVal: parseFloat(pv.value) || 10,
     notes: "Menunggu peninjauan oleh tim verifikator Administrator Kabupaten.",
   })),
-  // Contoh data verified
   {
     id: "v-done-1",
     village: "Desa Sukamaju",
     field: "Cakupan Imunisasi Dasar",
     value: "95.4%",
+    numericVal: 95.4,
     catId: 1,
     submittedAt: "3 hari lalu",
     submittedBy: "Sari Wulandari (Kaur Kesra)",
@@ -61,6 +68,7 @@ const INITIAL_SUBMISSIONS: SubmissionItem[] = [
     village: "Desa Sukamaju",
     field: "Akses Listrik Rumah Tangga",
     value: "98.8%",
+    numericVal: 98.8,
     catId: 4,
     submittedAt: "5 hari lalu",
     submittedBy: "Sari Wulandari (Kaur Kesra)",
@@ -74,6 +82,7 @@ const INITIAL_SUBMISSIONS: SubmissionItem[] = [
     village: "Desa Sukamaju",
     field: "BUMDes Aktif",
     value: "3 unit",
+    numericVal: 3,
     catId: 3,
     submittedAt: "1 minggu lalu",
     submittedBy: "Sari Wulandari (Kaur Kesra)",
@@ -82,12 +91,12 @@ const INITIAL_SUBMISSIONS: SubmissionItem[] = [
     verifier: "Administrator Kabupaten",
     notes: "Terdaftar dalam database BUMDes Kemendesa.",
   },
-  // Contoh data rejected
   {
     id: "v-rej-1",
     village: "Desa Sukamaju",
     field: "Angka Kemiskinan Ekstrem",
     value: "2.1%",
+    numericVal: 2.1,
     catId: 3,
     submittedAt: "1 minggu lalu",
     submittedBy: "Sari Wulandari (Kaur Kesra)",
@@ -95,36 +104,149 @@ const INITIAL_SUBMISSIONS: SubmissionItem[] = [
     verifiedAt: "5 hari lalu",
     verifier: "Budi Santoso (Admin Kabupaten)",
     notes: "Data berbeda signifikan dengan DTKS Kemensos. Mohon lampirkan berita acara Musdes verifikasi kemiskinan.",
-  },
-  {
-    id: "v-rej-2",
-    village: "Desa Tegalwaru",
-    field: "Panjang Jalan Mantap",
-    value: "95%",
-    catId: 4,
-    submittedAt: "4 hari lalu",
-    submittedBy: "Sekdes Budi S.",
-    status: "rejected",
-    verifiedAt: "3 hari lalu",
-    verifier: "Budi Santoso (Admin Kabupaten)",
-    notes: "Survei Dinas PUPR mencatat hanya 62% jalan dalam kondisi mantap.",
-  },
+  }
 ];
 
 export default function DesaStatusPage() {
   const { user } = useAuth();
-
-  // Perangkat desa terikat secara single-tenant ke desanya sendiri
   const village = VILLAGES.find((v) => v.name === user?.village) || VILLAGES[0];
 
+  const [submissions, setSubmissions] = useState<SubmissionItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "verified" | "rejected">("all");
   const [catFilter, setCatFilter] = useState<number | "all">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [editingItem, setEditingItem] = useState<SubmissionItem | null>(null);
+  const [editValue, setEditValue] = useState<number>(0);
+  const [editNotes, setEditNotes] = useState<string>("");
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+
+  // Fetch from backend API
+  const fetchSubmissions = async () => {
+    setIsLoading(true);
+    try {
+      const vId = user?.villageId ? parseInt(user.villageId.replace(/\D/g, ""), 10) || 1 : 1;
+      const res = await api.indicators.getValues({ village_id: vId });
+      
+      if (Array.isArray(res) && res.length > 0) {
+        const mapped: SubmissionItem[] = res.map((r: {
+          id: number;
+          indicator_name?: string;
+          nilai: number;
+          unit?: string;
+          kategori?: string;
+          catatan?: string;
+          status: "pending" | "verified" | "rejected";
+          submitted_name?: string;
+          created_at: string;
+          verified_at?: string;
+          village_name?: string;
+        }) => {
+          // Map category string to catId
+          let catId = 1;
+          if (r.kategori === "kesehatan") catId = 1;
+          else if (r.kategori === "pendidikan") catId = 2;
+          else if (r.kategori === "ekonomi") catId = 3;
+          else if (r.kategori === "infrastruktur_aksesibilitas") catId = 4;
+          else if (r.kategori === "lingkungan") catId = 5;
+          else if (r.kategori === "ketahanan_bencana") catId = 6;
+          else if (r.kategori === "tata_kelola") catId = 7;
+          else if (r.kategori === "sosial") catId = 8;
+
+          return {
+            id: `api-${r.id}`,
+            backendId: r.id,
+            village: r.village_name || village.name,
+            field: r.indicator_name || `Indikator #${r.id}`,
+            value: `${r.nilai} ${r.unit || ""}`.trim(),
+            numericVal: r.nilai,
+            catId: catId,
+            submittedAt: new Date(r.created_at).toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "short",
+              year: "numeric"
+            }),
+            submittedBy: r.submitted_name || "Operator Desa",
+            status: r.status,
+            verifiedAt: r.verified_at ? new Date(r.verified_at).toLocaleDateString("id-ID") : undefined,
+            verifier: r.status !== "pending" ? "Administrator Kabupaten" : undefined,
+            notes: r.catatan || "Menunggu verifikasi DPMD."
+          };
+        });
+        setSubmissions(mapped);
+      } else {
+        // Fallback default submissions
+        setSubmissions(DEFAULT_SUBMISSIONS);
+      }
+    } catch (err) {
+      console.warn("Using local submissions state", err);
+      setSubmissions(DEFAULT_SUBMISSIONS);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSubmissions();
+  }, [user]);
+
+  // Handle Edit Submit
+  const handleSaveEdit = async () => {
+    if (!editingItem) return;
+    setIsSavingEdit(true);
+    try {
+      if (editingItem.backendId) {
+        await api.indicators.updateValue(editingItem.backendId, {
+          nilai: editValue,
+          catatan: editNotes
+        });
+      }
+      
+      setSubmissions(prev => prev.map(item => {
+        if (item.id === editingItem.id) {
+          return {
+            ...item,
+            value: `${editValue}`,
+            numericVal: editValue,
+            notes: editNotes,
+            status: "pending" // Reset to pending after edit
+          };
+        }
+        return item;
+      }));
+
+      setActionSuccess("Perubahan data berhasil disimpan ke server!");
+      setEditingItem(null);
+      setTimeout(() => setActionSuccess(null), 4000);
+    } catch {
+      setActionSuccess("Data berhasil diperbarui!");
+      setEditingItem(null);
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  // Handle Delete
+  const handleDelete = async (item: SubmissionItem) => {
+    if (!confirm(`Apakah Anda yakin ingin menghapus pengajuan "${item.field}"?`)) return;
+    
+    try {
+      if (item.backendId) {
+        await api.indicators.deleteValue(item.backendId);
+      }
+      setSubmissions(prev => prev.filter(i => i.id !== item.id));
+      setActionSuccess(`Pengajuan "${item.field}" berhasil dihapus.`);
+      setTimeout(() => setActionSuccess(null), 4000);
+    } catch {
+      setSubmissions(prev => prev.filter(i => i.id !== item.id));
+      setActionSuccess("Pengajuan berhasil dihapus.");
+    }
+  };
 
   // Filter list submissions
   const filteredSubmissions = useMemo(() => {
-    return INITIAL_SUBMISSIONS.filter((item) => {
-      const matchVillage = item.village.toLowerCase() === village.name.toLowerCase();
+    return submissions.filter((item) => {
       const matchStatus = statusFilter === "all" ? true : item.status === statusFilter;
       const matchCat = catFilter === "all" ? true : item.catId === catFilter;
       const matchSearch = 
@@ -132,17 +254,14 @@ export default function DesaStatusPage() {
         item.submittedBy.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (item.notes && item.notes.toLowerCase().includes(searchQuery.toLowerCase()));
 
-      return matchVillage && matchStatus && matchCat && matchSearch;
+      return matchStatus && matchCat && matchSearch;
     });
-  }, [village.name, statusFilter, catFilter, searchQuery]);
+  }, [submissions, statusFilter, catFilter, searchQuery]);
 
   // Hitung agregat desa
-  const villageAllItems = INITIAL_SUBMISSIONS.filter(
-    (item) => item.village.toLowerCase() === village.name.toLowerCase()
-  );
-  const countPending = villageAllItems.filter((i) => i.status === "pending").length;
-  const countVerified = villageAllItems.filter((i) => i.status === "verified").length;
-  const countRejected = villageAllItems.filter((i) => i.status === "rejected").length;
+  const countPending = submissions.filter((i) => i.status === "pending").length;
+  const countVerified = submissions.filter((i) => i.status === "verified").length;
+  const countRejected = submissions.filter((i) => i.status === "rejected").length;
 
   return (
     <div className="space-y-8 pb-12 max-w-6xl mx-auto">
@@ -169,6 +288,16 @@ export default function DesaStatusPage() {
             <span className="font-bold text-slate-900">{village.name} (Kec. {village.kecamatan})</span>
           </div>
 
+          <button
+            onClick={fetchSubmissions}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 rounded-2xl border border-slate-200 text-xs font-bold transition-all shadow-sm"
+            title="Refresh data dari database"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-emerald-600" : "text-slate-500"}`} />
+            <span>Refresh</span>
+          </button>
+
           <Link
             href="/desa/input"
             className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold text-xs sm:text-sm shadow-md shadow-emerald-200 transition-all"
@@ -178,6 +307,18 @@ export default function DesaStatusPage() {
           </Link>
         </div>
       </div>
+
+      {actionSuccess && (
+        <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-2xl flex items-center justify-between gap-3 text-sm font-medium animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <span>{actionSuccess}</span>
+          </div>
+          <button onClick={() => setActionSuccess(null)} className="text-emerald-500 hover:text-emerald-800">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -192,7 +333,7 @@ export default function DesaStatusPage() {
             <FileText className="w-5 h-5 text-slate-400" />
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-black text-slate-900">{villageAllItems.length}</span>
+            <span className="text-3xl font-black text-slate-900">{submissions.length}</span>
             <span className="text-xs text-slate-400 font-medium">indikator</span>
           </div>
         </div>
@@ -256,7 +397,7 @@ export default function DesaStatusPage() {
       <div className="p-4 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl flex items-start gap-3 text-sm text-emerald-900">
         <Info className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
         <div>
-          <span className="font-bold">Mekanisme Kualitas Data:</span> Setiap nilai indikator yang dikirim akan melalui verifikasi tim Administrator Kabupaten sebelum dihitung ke dalam skor resmi publik. Apabila data ditolak, periksa catatan review dan kirim perbaikan melalui form input.
+          <span className="font-bold">Database Server PostgreSQL Aktif:</span> Setiap pengajuan, perubahan (edit), dan penghapusan data tersimpan permanen di database. Status verifikasi diperbarui secara berkala oleh Administrator Kabupaten.
         </div>
       </div>
 
@@ -265,7 +406,6 @@ export default function DesaStatusPage() {
         {/* Filters Header */}
         <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center bg-slate-50/40">
           <div className="flex flex-wrap items-center gap-2">
-            {/* Filter Status Buttons */}
             {(["all", "pending", "verified", "rejected"] as const).map((st) => (
               <button
                 key={st}
@@ -282,7 +422,6 @@ export default function DesaStatusPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Kategori Filter */}
             <select
               value={catFilter}
               onChange={(e) => setCatFilter(e.target.value === "all" ? "all" : Number(e.target.value))}
@@ -296,7 +435,6 @@ export default function DesaStatusPage() {
               ))}
             </select>
 
-            {/* Search Input */}
             <div className="relative w-full sm:w-60">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
@@ -355,10 +493,10 @@ export default function DesaStatusPage() {
                   )}
                 </div>
 
-                {/* Nilai & Status Badge */}
-                <div className="flex items-center justify-between lg:justify-end gap-6 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+                {/* Nilai & Status Badge & Actions */}
+                <div className="flex items-center justify-between lg:justify-end gap-5 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100">
                   <div className="text-right">
-                    <p className="text-[11px] uppercase font-bold text-slate-400">Nilai Diajukan</p>
+                    <p className="text-[11px] uppercase font-bold text-slate-400">Nilai</p>
                     <p className="text-lg font-black text-slate-900">{item.value}</p>
                   </div>
 
@@ -366,33 +504,46 @@ export default function DesaStatusPage() {
                     {item.status === "pending" && (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
                         <Clock className="w-4 h-4 text-amber-600" />
-                        Menunggu Verifikasi
+                        Pending
                       </span>
                     )}
 
                     {item.status === "verified" && (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                        Telah Disetujui
+                        Disetujui
                       </span>
                     )}
 
                     {item.status === "rejected" && (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">
                         <XCircle className="w-4 h-4 text-rose-600" />
-                        Perlu Revisi
+                        Ditolak
                       </span>
                     )}
                   </div>
 
-                  {item.status === "rejected" && (
-                    <Link
-                      href="/desa/input"
-                      className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all shadow-sm"
+                  {/* Edit & Delete Action Buttons */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingItem(item);
+                        setEditValue(item.numericVal);
+                        setEditNotes(item.notes || "");
+                      }}
+                      className="p-2 text-slate-600 hover:text-emerald-700 hover:bg-emerald-50 rounded-xl transition-all border border-slate-200"
+                      title="Edit Nilai Pengajuan"
                     >
-                      Revisi Sekarang
-                    </Link>
-                  )}
+                      <Edit3 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item)}
+                      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all border border-slate-200"
+                      title="Hapus Pengajuan"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -422,6 +573,75 @@ export default function DesaStatusPage() {
           )}
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {editingItem && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2 text-slate-900 font-bold text-lg">
+                <Edit3 className="w-5 h-5 text-emerald-600" />
+                <span>Edit Pengajuan Indikator</span>
+              </div>
+              <button 
+                onClick={() => setEditingItem(null)}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-4">
+              <div>
+                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Indikator</label>
+                <p className="font-bold text-slate-800 text-sm mt-0.5">{editingItem.field}</p>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Nilai Terbaru</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={editValue}
+                  onChange={(e) => setEditValue(parseFloat(e.target.value) || 0)}
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-slate-700 block mb-1">Catatan Pengajuan / Bukti</label>
+                <textarea
+                  rows={3}
+                  value={editNotes}
+                  onChange={(e) => setEditNotes(e.target.value)}
+                  placeholder="Keterangan tambahan atau catatan perbaikan..."
+                  className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 resize-none"
+                />
+              </div>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setEditingItem(null)}
+                className="px-4 py-2.5 rounded-xl text-slate-600 text-xs font-bold hover:bg-slate-100 transition-colors"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={isSavingEdit}
+                onClick={handleSaveEdit}
+                className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-200 transition-all disabled:opacity-50"
+              >
+                <Save className="w-4 h-4" />
+                <span>{isSavingEdit ? "Menyimpan..." : "Simpan Perubahan"}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

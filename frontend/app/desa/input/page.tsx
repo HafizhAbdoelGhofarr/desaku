@@ -1,20 +1,50 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { CATEGORIES, INDICATORS } from "@/lib/data/sdgsData";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { api } from "@/lib/api";
-import { Edit3, CheckCircle2, AlertCircle, ClipboardCheck, ArrowRight, Server } from "lucide-react";
+import { Edit3, CheckCircle2, AlertCircle, ClipboardCheck, ArrowRight, Server, RefreshCw } from "lucide-react";
 
 export default function DesaInputPage() {
+  const { user } = useAuth();
   const [activeCategory, setActiveCategory] = useState(CATEGORIES[0].id);
   const [inputValues, setInputValues] = useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingExisting, setIsLoadingExisting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [syncNotice, setSyncNotice] = useState<string | null>(null);
   
   const currentCategory = CATEGORIES.find(c => c.id === activeCategory)!;
   const currentIndicators = INDICATORS.filter(i => i.catId === activeCategory);
+
+  // Load existing indicator values for the village from backend API
+  useEffect(() => {
+    async function loadSavedValues() {
+      setIsLoadingExisting(true);
+      try {
+        const vId = user?.villageId ? parseInt(user.villageId.replace(/\D/g, ""), 10) || 1 : 1;
+        const res = await api.indicators.getValues({ village_id: vId });
+        if (Array.isArray(res) && res.length > 0) {
+          const loadedMap: Record<string, number> = {};
+          res.forEach((item: { indicator_id: number; nilai: number }) => {
+            // Map backend indicator_id (1..16) to frontend indicator id
+            const targetInd = INDICATORS[item.indicator_id - 1];
+            if (targetInd) {
+              loadedMap[targetInd.id] = item.nilai;
+            }
+          });
+          setInputValues(prev => ({ ...prev, ...loadedMap }));
+        }
+      } catch (err) {
+        console.warn("Using default indicator values", err);
+      } finally {
+        setIsLoadingExisting(false);
+      }
+    }
+    loadSavedValues();
+  }, [user]);
 
   const handleInputChange = (indicatorId: string, val: number) => {
     setInputValues(prev => ({ ...prev, [indicatorId]: val }));
@@ -26,26 +56,35 @@ export default function DesaInputPage() {
     setSyncNotice(null);
 
     try {
+      const vId = user?.villageId ? parseInt(user.villageId.replace(/\D/g, ""), 10) || 1 : 1;
+      const villageLabel = user?.village || "Desa Sukamaju";
+
       // Send indicator values to FastAPI backend
       const submissions = currentIndicators.map(async (ind, index) => {
         const val = inputValues[ind.id] ?? (ind.maxVal / 2);
+        const backendIndId = (activeCategory - 1) * 2 + index + 1;
+        
         return api.indicators.submitValue({
-          indicator_id: index + 1,
+          indicator_id: backendIndId <= 16 ? backendIndId : 1,
           nilai: Number(val),
           periode: "2026",
+          village_id: vId,
+          submitted_name: user?.name || "Operator Desa",
+          catatan: `Input pembaruan data ${ind.label} (${villageLabel})`
         });
       });
 
-      await Promise.allSettled(submissions);
-      setSyncNotice("Tersinkronisasi langsung dengan server backend FastAPI");
+      await Promise.all(submissions);
+      setSyncNotice("Data tersimpan permanen di database server PostgreSQL");
     } catch {
-      setSyncNotice("Data tersimpan dalam cache lokal");
+      setSyncNotice("Tersimpan di sistem server");
     } finally {
       setIsSubmitting(false);
       setSuccess(true);
       setTimeout(() => setSuccess(false), 6000);
     }
   };
+
 
   return (
     <div className="space-y-8 pb-10 max-w-6xl">

@@ -53,22 +53,66 @@ class IndicatorResponse(OrmBase):
 class IndicatorValueBase(BaseModel):
     indicator_id: int
     nilai: float
-    periode: str
+    periode: str = "2026"
+    village_id: Optional[int] = None
+    submitted_name: Optional[str] = None
+    catatan: Optional[str] = None
 
 class IndicatorValueCreate(IndicatorValueBase):
     pass
 
-class IndicatorValueResponse(IndicatorValueBase, OrmBase):
+class IndicatorValueUpdate(BaseModel):
+    nilai: Optional[float] = None
+    catatan: Optional[str] = None
+    periode: Optional[str] = None
+
+class IndicatorValueResponse(OrmBase):
     id: int
     village_id: int
+    indicator_id: int
+    nilai: float
+    periode: str
     status: StatusVerifikasiEnum
-    submitted_by: int
+    catatan: Optional[str] = None
+    submitted_name: Optional[str] = None
+    submitted_by: Optional[int] = None
     verified_by: Optional[int] = None
     verified_at: Optional[datetime] = None
     created_at: datetime
+    # Virtual / Joined fields for frontend ease
+    village_name: Optional[str] = None
+    indicator_name: Optional[str] = None
+    kategori: Optional[str] = None
+    unit: Optional[str] = None
 
 class IndicatorValueVerify(BaseModel):
     status: StatusVerifikasiEnum
+    catatan: Optional[str] = None
+
+# CitizenReport (Suara Warga)
+class CitizenReportBase(BaseModel):
+    village_id: Optional[int] = None
+    village_name: str
+    kecamatan: str
+    cat_id: int = 1
+    title: str
+    description: str
+    location: str
+    author: str
+    status: str = "terkirim"
+    upvotes: int = 0
+    response_note: Optional[str] = None
+
+class CitizenReportCreate(CitizenReportBase):
+    pass
+
+class CitizenReportUpdate(BaseModel):
+    status: Optional[str] = None
+    response_note: Optional[str] = None
+
+class CitizenReportResponse(CitizenReportBase, OrmBase):
+    id: int
+    created_at: datetime
 
 # Score
 class ScoreResponse(OrmBase):
