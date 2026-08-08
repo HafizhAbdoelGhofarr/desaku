@@ -116,11 +116,34 @@ export const api = {
     submitValue: async (data: {
       indicator_id: number;
       nilai: number;
-      periode: string;
+      periode?: string;
+      village_id?: number;
+      submitted_name?: string;
+      catatan?: string;
     }) => {
       return request("/indicator-values", {
         method: "POST",
         body: JSON.stringify(data),
+      });
+    },
+
+    updateValue: async (
+      id: number,
+      data: {
+        nilai?: number;
+        catatan?: string;
+        periode?: string;
+      }
+    ) => {
+      return request(`/indicator-values/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      });
+    },
+
+    deleteValue: async (id: number) => {
+      return request(`/indicator-values/${id}`, {
+        method: "DELETE",
       });
     },
 
@@ -138,7 +161,54 @@ export const api = {
     },
   },
 
-  // 4. Simulation Services
+  // 4. Reports / Aspirasi Warga Services
+  reports: {
+    getAll: async (params?: { village_id?: number; cat_id?: number }) => {
+      const query = new URLSearchParams();
+      if (params?.village_id) query.append("village_id", String(params.village_id));
+      if (params?.cat_id) query.append("cat_id", String(params.cat_id));
+      const qs = query.toString() ? `?${query.toString()}` : "";
+      return request(`/reports${qs}`);
+    },
+
+    create: async (data: {
+      village_id?: number;
+      village_name: string;
+      kecamatan: string;
+      cat_id: number;
+      title: string;
+      description: string;
+      location: string;
+      author: string;
+      status?: string;
+    }) => {
+      return request("/reports", {
+        method: "POST",
+        body: JSON.stringify(data),
+      });
+    },
+
+    upvote: async (id: number) => {
+      return request(`/reports/${id}/upvote`, {
+        method: "PATCH",
+      });
+    },
+
+    respond: async (id: number, data: { status?: string; response_note?: string }) => {
+      return request(`/reports/${id}/respond`, {
+        method: "PATCH",
+        body: JSON.stringify(data),
+      });
+    },
+
+    delete: async (id: number) => {
+      return request(`/reports/${id}`, {
+        method: "DELETE",
+      });
+    },
+  },
+
+  // 5. Simulation Services
   simulation: {
     simulate: async (data: {
       village_id: number;
@@ -152,8 +222,9 @@ export const api = {
     },
   },
 
-  // 5. Health Check
+  // 6. Health Check
   health: async (): Promise<{ message: string }> => {
     return request("/");
   },
 };
+

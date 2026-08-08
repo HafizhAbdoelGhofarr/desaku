@@ -98,7 +98,9 @@ class IndicatorValue(Base):
 
     status = Column(Enum(StatusVerifikasiEnum), nullable=False,
                      default=StatusVerifikasiEnum.pending)
-    submitted_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    catatan = Column(Text, nullable=True)
+    submitted_name = Column(String(100), nullable=True)
+    submitted_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     verified_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     verified_at = Column(DateTime(timezone=True), nullable=True)
 
@@ -142,3 +144,22 @@ class Report(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     village = relationship("Village", back_populates="reports")
+
+
+class CitizenReport(Base):
+    """Aspirasi & Laporan Warga Desa (Suara Warga)"""
+    __tablename__ = "citizen_reports"
+
+    id = Column(Integer, primary_key=True, index=True)
+    village_id = Column(Integer, ForeignKey("villages.id"), nullable=True)
+    village_name = Column(String(100), nullable=False)
+    kecamatan = Column(String(100), nullable=False)
+    cat_id = Column(Integer, nullable=False, default=1)
+    title = Column(String(200), nullable=False)
+    description = Column(Text, nullable=False)
+    location = Column(String(150), nullable=False)
+    author = Column(String(100), nullable=False)
+    status = Column(String(50), nullable=False, default="terkirim")
+    upvotes = Column(Integer, nullable=False, default=0)
+    response_note = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

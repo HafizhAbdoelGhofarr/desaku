@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { 
   VILLAGES, 
   CATEGORIES, 
@@ -14,6 +14,7 @@ import {
   getKabupatens,
   getKecamatans
 } from "@/lib/data/sdgsData";
+import { api } from "@/lib/api";
 import { 
   Search, 
   Filter, 
@@ -63,6 +64,64 @@ export default function PublikSkorPage() {
   const [newAuthor, setNewAuthor] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  // Fetch reports from backend
+  const fetchCitizenReports = async () => {
+    try {
+      const res = await api.reports.getAll();
+      if (Array.isArray(res) && res.length > 0) {
+        const mapped: CitizenReport[] = res.map((r: {
+          id: number;
+          village_id?: number;
+          village_name?: string;
+          kecamatan?: string;
+          cat_id?: number;
+          title?: string;
+          description?: string;
+          location?: string;
+          author?: string;
+          status?: "terkirim" | "ditinjau" | "ditindaklanjuti";
+          upvotes?: number;
+          response_note?: string;
+          created_at?: string;
+        }) => {
+          const vObj = VILLAGES.find(v => v.name.toLowerCase() === (r.village_name || "").toLowerCase()) || VILLAGES[0];
+          const categoryObj = CATEGORIES.find(c => c.id === (r.cat_id || 1));
+
+          return {
+            id: `rep-${r.id}`,
+            backendId: r.id,
+            village: r.village_name || vObj.name,
+            villageName: r.village_name || vObj.name,
+            villageId: vObj.id,
+            kecamatan: r.kecamatan || vObj.kecamatan,
+            catId: r.cat_id || 1,
+            category: categoryObj?.label.toLowerCase() || "infrastruktur",
+            title: r.title || "Aspirasi Warga",
+            description: r.description || "",
+            location: r.location || vObj.name,
+            author: r.author || "Warga Desa",
+            submittedAt: r.created_at ? new Date(r.created_at).toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "short",
+              year: "numeric"
+            }) : "Baru saja",
+            createdAt: r.created_at ? new Date(r.created_at).toLocaleDateString("id-ID") : "Baru saja",
+            status: r.status || "terkirim",
+            upvotes: r.upvotes || 0,
+            adminResponse: r.response_note || undefined,
+          };
+        });
+        setReports(mapped);
+      }
+    } catch (err) {
+      console.warn("Using fallback reports", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchCitizenReports();
+  }, []);
 
   // Unique Regional Lists
   const provinces = useMemo(() => getProvinces(), []);
@@ -127,24 +186,58 @@ export default function PublikSkorPage() {
   }, [reports, selectedReportCat, reportVillageFilter]);
 
   // Handle Upvote
-  const handleUpvote = (id: string) => {
+  const handleUpvote = async (id: string) => {
+    const targetReport = reports.find(r => r.id === id);
     setReports((prev) =>
       prev.map((r) => (r.id === id ? { ...r, upvotes: r.upvotes + 1 } : r))
     );
+
+    if (targetReport?.backendId) {
+      try {
+        await api.reports.upvote(targetReport.backendId);
+      } catch (err) {
+        console.warn("Failed to persist upvote", err);
+      }
+    }
   };
 
   // Handle Submit Report
-  const handleSubmitReport = (e: React.FormEvent) => {
+  const handleSubmitReport = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle || !newDesc || !newLocation) return;
 
     const matchedVillage = VILLAGES.find((v) => v.name === newVillage);
+    const catLabel = CATEGORIES.find((c) => c.id === Number(newCatId))?.label.toLowerCase() || "infrastruktur";
+    const vId = matchedVillage?.id ? parseInt(matchedVillage.id.replace(/\D/g, ""), 10) || 1 : 1;
+
+    let createdBackendId: number | undefined = undefined;
+
+    try {
+      const res = await api.reports.create({
+        village_id: vId,
+        village_name: newVillage,
+        kecamatan: matchedVillage?.kecamatan || "Wilayah",
+        cat_id: Number(newCatId),
+        title: newTitle,
+        description: newDesc,
+        location: newLocation,
+        author: isAnonymous ? "Warga Desa (Anonim)" : (newAuthor || "Warga Desa"),
+        status: "terkirim"
+      });
+      if (res && res.id) {
+        createdBackendId = res.id;
+      }
+    } catch (err) {
+      console.warn("Failed to persist report to backend", err);
+    }
+
     const newReportItem: CitizenReport = {
-      id: `rep-${Date.now()}`,
+      id: `rep-${createdBackendId || Date.now()}`,
+      backendId: createdBackendId,
       village: newVillage,
       kecamatan: matchedVillage?.kecamatan || "Wilayah",
       catId: Number(newCatId),
-      category: CATEGORIES.find((c) => c.id === Number(newCatId))?.label.toLowerCase() || "umum",
+      category: catLabel,
       title: newTitle,
       description: newDesc,
       location: newLocation,
@@ -168,6 +261,7 @@ export default function PublikSkorPage() {
       setIsAnonymous(false);
     }, 1500);
   };
+
 
   return (
     <div className="space-y-8 pb-16">

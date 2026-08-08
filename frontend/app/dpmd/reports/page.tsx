@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { 
   CITIZEN_REPORTS, 
   CATEGORIES, 
   VILLAGES, 
   type CitizenReport 
 } from "@/lib/data/sdgsData";
+import { api } from "@/lib/api";
 import { 
   MessageCircle, 
   Filter, 
@@ -20,11 +21,13 @@ import {
   ShieldCheck,
   Building2,
   Calendar,
-  X
+  X,
+  RefreshCw
 } from "lucide-react";
 
 export default function AdminReportsPage() {
   const [reports, setReports] = useState<CitizenReport[]>(CITIZEN_REPORTS);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedKecamatan, setSelectedKecamatan] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
@@ -34,6 +37,68 @@ export default function AdminReportsPage() {
   const [activeReport, setActiveReport] = useState<CitizenReport | null>(null);
   const [responseText, setResponseText] = useState("");
   const [targetStatus, setTargetStatus] = useState<CitizenReport["status"]>("ditinjau");
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Fetch reports from backend
+  const fetchAllReports = async () => {
+    setIsLoading(true);
+    try {
+      const res = await api.reports.getAll();
+      if (Array.isArray(res) && res.length > 0) {
+        const mapped: CitizenReport[] = res.map((r: {
+          id: number;
+          village_id?: number;
+          village_name?: string;
+          kecamatan?: string;
+          cat_id?: number;
+          title?: string;
+          description?: string;
+          location?: string;
+          author?: string;
+          status?: "terkirim" | "ditinjau" | "ditindaklanjuti";
+          upvotes?: number;
+          response_note?: string;
+          created_at?: string;
+        }) => {
+          const vObj = VILLAGES.find(v => v.name.toLowerCase() === (r.village_name || "").toLowerCase()) || VILLAGES[0];
+          const categoryObj = CATEGORIES.find(c => c.id === (r.cat_id || 1));
+
+          return {
+            id: `rep-${r.id}`,
+            backendId: r.id,
+            village: r.village_name || vObj.name,
+            villageName: r.village_name || vObj.name,
+            villageId: vObj.id,
+            kecamatan: r.kecamatan || vObj.kecamatan,
+            catId: r.cat_id || 1,
+            category: categoryObj?.label.toLowerCase() || "infrastruktur",
+            title: r.title || "Aspirasi Warga",
+            description: r.description || "",
+            location: r.location || vObj.name,
+            author: r.author || "Warga Desa",
+            submittedAt: r.created_at ? new Date(r.created_at).toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "short",
+              year: "numeric"
+            }) : "Baru saja",
+            createdAt: r.created_at ? new Date(r.created_at).toLocaleDateString("id-ID") : "Baru saja",
+            status: r.status || "terkirim",
+            upvotes: r.upvotes || 0,
+            adminResponse: r.response_note || undefined,
+          };
+        });
+        setReports(mapped);
+      }
+    } catch (err) {
+      console.warn("Using fallback reports", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllReports();
+  }, []);
 
   // Extract unique kecamatans
   const kecamatans = useMemo(() => {
@@ -50,10 +115,12 @@ export default function AdminReportsPage() {
         r.category === selectedCategory;
       const matchStatus = selectedStatus === "all" || r.status === selectedStatus;
       const vName = r.villageName || r.village || "";
+      const q = searchQuery.toLowerCase().trim();
       const matchSearch =
-        r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        r.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        vName.toLowerCase().includes(searchQuery.toLowerCase());
+        !q ||
+        (r.title && r.title.toLowerCase().includes(q)) ||
+        (r.description && r.description.toLowerCase().includes(q)) ||
+        (vName && vName.toLowerCase().includes(q));
       return matchKec && matchCat && matchStatus && matchSearch;
     });
   }, [reports, selectedKecamatan, selectedCategory, selectedStatus, searchQuery]);
@@ -69,9 +136,25 @@ export default function AdminReportsPage() {
     setTargetStatus(report.status);
   };
 
-  const handleSaveResponse = (e: React.FormEvent) => {
+  const handleSaveResponse = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeReport) return;
+
+    setIsSaving(true);
+    const updatedResponse = responseText.trim() ? `[DPMD Kabupaten]: ${responseText.trim()}` : undefined;
+
+    try {
+      if (activeReport.backendId) {
+        await api.reports.respond(activeReport.backendId, {
+          response_note: updatedResponse || "",
+          status: targetStatus
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to persist admin report response", err);
+    } finally {
+      setIsSaving(false);
+    }
 
     setReports((prev) =>
       prev.map((r) =>
@@ -79,7 +162,7 @@ export default function AdminReportsPage() {
           ? {
               ...r,
               status: targetStatus,
-              adminResponse: responseText.trim() || undefined,
+              adminResponse: updatedResponse,
             }
           : r
       )
@@ -88,6 +171,7 @@ export default function AdminReportsPage() {
     setActiveReport(null);
     setResponseText("");
   };
+
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12">

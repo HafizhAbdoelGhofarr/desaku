@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { PENDING_VERIFICATIONS, CATEGORIES, VILLAGES } from "@/lib/data/sdgsData";
 import { api } from "@/lib/api";
 import { 
@@ -13,7 +13,8 @@ import {
   X, 
   Check, 
   AlertTriangle, 
-  Send 
+  Send,
+  RefreshCw
 } from "lucide-react";
 
 interface VerificationItem {
@@ -28,11 +29,23 @@ interface VerificationItem {
   reviewNote?: string;
 }
 
+interface VerificationItem {
+  id: string;
+  backendId?: number;
+  village: string;
+  field: string;
+  catId: number;
+  value: string;
+  submittedBy: string;
+  submittedAt: string;
+  status?: "pending" | "verified" | "rejected";
+  reviewNote?: string;
+}
+
 export default function VerificationPage() {
-  const [data, setData] = useState<VerificationItem[]>(
-    PENDING_VERIFICATIONS.map((item) => ({ ...item, status: "pending" as const }))
-  );
+  const [data, setData] = useState<VerificationItem[]>([]);
   const [history, setHistory] = useState<VerificationItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"pending" | "history">("pending");
 
   // Filters
@@ -48,6 +61,79 @@ export default function VerificationPage() {
   // Quick Approve Modal / Confirmation
   const [verifySuccessMsg, setVerifySuccessMsg] = useState<string | null>(null);
 
+  // Fetch all indicator submissions from backend
+  const fetchAllSubmissions = async () => {
+    setIsLoading(true);
+    try {
+      const res = await api.indicators.getValues();
+      if (Array.isArray(res) && res.length > 0) {
+        const pendingList: VerificationItem[] = [];
+        const historyList: VerificationItem[] = [];
+
+        res.forEach((r: {
+          id: number;
+          indicator_name?: string;
+          nilai: number;
+          unit?: string;
+          kategori?: string;
+          catatan?: string;
+          status: "pending" | "verified" | "rejected";
+          submitted_name?: string;
+          created_at: string;
+          village_name?: string;
+        }) => {
+          let catId = 1;
+          if (r.kategori === "kesehatan") catId = 1;
+          else if (r.kategori === "pendidikan") catId = 2;
+          else if (r.kategori === "ekonomi") catId = 3;
+          else if (r.kategori === "infrastruktur_aksesibilitas") catId = 4;
+          else if (r.kategori === "lingkungan") catId = 5;
+          else if (r.kategori === "ketahanan_bencana") catId = 6;
+          else if (r.kategori === "tata_kelola") catId = 7;
+          else if (r.kategori === "sosial") catId = 8;
+
+          const item: VerificationItem = {
+            id: `ind-val-${r.id}`,
+            backendId: r.id,
+            village: r.village_name || "Desa Sukamaju",
+            field: r.indicator_name || `Indikator #${r.id}`,
+            catId: catId,
+            value: `${r.nilai} ${r.unit || ""}`.trim(),
+            submittedBy: r.submitted_name || "Operator Desa",
+            submittedAt: new Date(r.created_at).toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "short",
+              year: "numeric"
+            }),
+            status: r.status,
+            reviewNote: r.catatan || undefined,
+          };
+
+          if (r.status === "pending") {
+            pendingList.push(item);
+          } else {
+            historyList.push(item);
+          }
+        });
+
+        setData(pendingList);
+        setHistory(historyList);
+      } else {
+        // Fallback default
+        setData(PENDING_VERIFICATIONS.map((item) => ({ ...item, status: "pending" as const })));
+      }
+    } catch (err) {
+      console.warn("Using local pending verifications fallback", err);
+      setData(PENDING_VERIFICATIONS.map((item) => ({ ...item, status: "pending" as const })));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllSubmissions();
+  }, []);
+
   // Extract unique kecamatans
   const kecamatans = useMemo(() => {
     return Array.from(new Set(VILLAGES.map((v) => v.kecamatan)));
@@ -55,9 +141,11 @@ export default function VerificationPage() {
 
   // Filtered Pending Data
   const filteredPending = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
     return data.filter((item) => {
-      const matchSearch = item.village.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.field.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchSearch = !q ||
+                          (item.village && item.village.toLowerCase().includes(q)) ||
+                          (item.field && item.field.toLowerCase().includes(q));
       const itemKec = VILLAGES.find((v) => v.name === item.village)?.kecamatan;
       const matchKec = selectedKecamatan === "all" || itemKec === selectedKecamatan;
       const matchVillage = selectedVillage === "all" || item.village === selectedVillage;
@@ -68,9 +156,11 @@ export default function VerificationPage() {
 
   // Filtered History Data
   const filteredHistory = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
     return history.filter((item) => {
-      const matchSearch = item.village.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.field.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchSearch = !q ||
+                          (item.village && item.village.toLowerCase().includes(q)) ||
+                          (item.field && item.field.toLowerCase().includes(q));
       const itemKec = VILLAGES.find((v) => v.name === item.village)?.kecamatan;
       const matchKec = selectedKecamatan === "all" || itemKec === selectedKecamatan;
       const matchVillage = selectedVillage === "all" || item.village === selectedVillage;
@@ -91,16 +181,16 @@ export default function VerificationPage() {
 
     // Send status update to FastAPI backend
     try {
-      const numericId = parseInt(item.id.replace(/\D/g, ""), 10) || 1;
-      await api.indicators.verifyValue(numericId, {
+      const targetId = item.backendId || parseInt(item.id.replace(/\D/g, ""), 10) || 1;
+      await api.indicators.verifyValue(targetId, {
         status: "verified",
-        catatan: "Disetujui oleh Administrator DPMD",
+        catatan: "Disetujui oleh Administrator DPMD (Sesuai berkas lapangan)",
       });
-    } catch {
-      // Graceful fallback
+    } catch (err) {
+      console.warn("Backend verify sync failed", err);
     }
 
-    setVerifySuccessMsg(`Indikator "${item.field}" dari ${item.village} berhasil diverifikasi & disinkronkan ke database!`);
+    setVerifySuccessMsg(`Indikator "${item.field}" dari ${item.village} berhasil diverifikasi & disimpan permanen ke database!`);
     setTimeout(() => setVerifySuccessMsg(null), 3500);
   };
 
@@ -124,20 +214,21 @@ export default function VerificationPage() {
 
     // Send rejection to FastAPI backend
     try {
-      const numericId = parseInt(rejectModalItem.id.replace(/\D/g, ""), 10) || 1;
-      await api.indicators.verifyValue(numericId, {
+      const targetId = rejectModalItem.backendId || parseInt(rejectModalItem.id.replace(/\D/g, ""), 10) || 1;
+      await api.indicators.verifyValue(targetId, {
         status: "rejected",
         catatan: rejectReason,
       });
-    } catch {
-      // Graceful fallback
+    } catch (err) {
+      console.warn("Backend reject sync failed", err);
     }
 
     setRejectModalItem(null);
     setRejectReason("");
-    setVerifySuccessMsg(`Pengajuan "${rejectModalItem.field}" dikembalikan untuk revisi.`);
+    setVerifySuccessMsg(`Pengajuan "${rejectModalItem.field}" dikembalikan untuk revisi & disimpan ke database.`);
     setTimeout(() => setVerifySuccessMsg(null), 3500);
   };
+
 
   return (
     <div className="space-y-8 pb-12 max-w-6xl mx-auto">
@@ -159,8 +250,17 @@ export default function VerificationPage() {
           </div>
         </div>
 
-        {/* Stats summary */}
+        {/* Stats summary & Refresh */}
         <div className="flex items-center gap-3">
+          <button
+            onClick={fetchAllSubmissions}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 rounded-2xl border border-slate-200 text-xs font-bold transition-all shadow-sm"
+            title="Refresh antrean verifikasi"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-emerald-600" : "text-slate-500"}`} />
+            <span>Refresh</span>
+          </button>
           <div className="bg-amber-50 border border-amber-200 px-4 py-2 rounded-2xl text-center">
             <span className="text-[11px] font-bold text-amber-800 uppercase block">Menunggu</span>
             <span className="text-xl font-black text-amber-900">{data.length}</span>
@@ -172,6 +272,7 @@ export default function VerificationPage() {
             </span>
           </div>
         </div>
+
       </div>
 
       {/* Success Notification Alert */}

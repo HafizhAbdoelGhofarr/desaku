@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { 
   CITIZEN_REPORTS, 
@@ -8,6 +8,7 @@ import {
   VILLAGES, 
   type CitizenReport 
 } from "@/lib/data/sdgsData";
+import { api } from "@/lib/api";
 import { 
   MessageCircle, 
   ShieldCheck, 
@@ -17,7 +18,8 @@ import {
   ThumbsUp, 
   Calendar, 
   Send, 
-  X
+  X,
+  RefreshCw
 } from "lucide-react";
 
 export default function DesaLaporanPage() {
@@ -25,20 +27,85 @@ export default function DesaLaporanPage() {
 
   // Find the single locked village for the authenticated village staff
   const currentVillage = useMemo(() => {
-    return VILLAGES.find((v) => v.id === user?.villageId) || VILLAGES[0];
+    return VILLAGES.find((v) => v.id === user?.villageId || v.name === user?.village) || VILLAGES[0];
   }, [user]);
 
   const [reports, setReports] = useState<CitizenReport[]>(CITIZEN_REPORTS);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
   // Response Modal
   const [activeReport, setActiveReport] = useState<CitizenReport | null>(null);
   const [responseText, setResponseText] = useState("");
   const [targetStatus, setTargetStatus] = useState<CitizenReport["status"]>("ditinjau");
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Fetch reports from backend
+  const fetchReports = async () => {
+    setIsLoading(true);
+    try {
+      const vId = currentVillage.id ? parseInt(currentVillage.id.replace(/\D/g, ""), 10) || 1 : 1;
+      const res = await api.reports.getAll({ village_id: vId });
+      if (Array.isArray(res) && res.length > 0) {
+        const mapped: CitizenReport[] = res.map((r: {
+          id: number;
+          village_id?: number;
+          village_name?: string;
+          kecamatan?: string;
+          cat_id?: number;
+          title?: string;
+          description?: string;
+          location?: string;
+          author?: string;
+          status?: "terkirim" | "ditinjau" | "ditindaklanjuti";
+          upvotes?: number;
+          response_note?: string;
+          created_at?: string;
+        }) => {
+          const categoryObj = CATEGORIES.find(c => c.id === (r.cat_id || 1));
+
+          return {
+            id: `rep-${r.id}`,
+            backendId: r.id,
+            village: r.village_name || currentVillage.name,
+            villageName: r.village_name || currentVillage.name,
+            villageId: currentVillage.id,
+            kecamatan: r.kecamatan || currentVillage.kecamatan,
+            catId: r.cat_id || 1,
+            category: categoryObj?.label.toLowerCase() || "infrastruktur",
+            title: r.title || "Aspirasi Warga",
+            description: r.description || "",
+            location: r.location || currentVillage.name,
+            author: r.author || "Warga Desa",
+            submittedAt: r.created_at ? new Date(r.created_at).toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "short",
+              year: "numeric"
+            }) : "Baru saja",
+            createdAt: r.created_at ? new Date(r.created_at).toLocaleDateString("id-ID") : "Baru saja",
+            status: r.status || "terkirim",
+            upvotes: r.upvotes || 0,
+            adminResponse: r.response_note || undefined,
+          };
+        });
+        setReports(mapped);
+      } else {
+        setReports(CITIZEN_REPORTS.filter(r => r.villageId === currentVillage.id));
+      }
+    } catch (err) {
+      console.warn("Using fallback reports", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReports();
+  }, [currentVillage]);
 
   // Reports belonging exclusively to this village
   const villageReports = useMemo(() => {
-    return reports.filter((r) => r.villageId === currentVillage.id);
+    return reports.filter((r) => !r.villageId || r.villageId === currentVillage.id || (r.village && r.village.toLowerCase() === currentVillage.name.toLowerCase()));
   }, [reports, currentVillage]);
 
   const filteredReports = useMemo(() => {
@@ -57,9 +124,25 @@ export default function DesaLaporanPage() {
     setTargetStatus(report.status);
   };
 
-  const handleSaveResponse = (e: React.FormEvent) => {
+  const handleSaveResponse = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeReport) return;
+
+    setIsSaving(true);
+    const updatedResponse = responseText.trim() ? `[Pemerintah Desa]: ${responseText.trim()}` : undefined;
+
+    try {
+      if (activeReport.backendId) {
+        await api.reports.respond(activeReport.backendId, {
+          response_note: updatedResponse || "",
+          status: targetStatus
+        });
+      }
+    } catch (err) {
+      console.warn("Failed to persist report response", err);
+    } finally {
+      setIsSaving(false);
+    }
 
     setReports((prev) =>
       prev.map((r) =>
@@ -67,7 +150,7 @@ export default function DesaLaporanPage() {
           ? {
               ...r,
               status: targetStatus,
-              adminResponse: responseText.trim() ? `[Pemerintah Desa]: ${responseText.trim()}` : undefined,
+              adminResponse: updatedResponse,
             }
           : r
       )
@@ -76,6 +159,7 @@ export default function DesaLaporanPage() {
     setActiveReport(null);
     setResponseText("");
   };
+
 
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-12">

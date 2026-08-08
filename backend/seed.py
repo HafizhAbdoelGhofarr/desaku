@@ -1,5 +1,5 @@
 from database import engine, Base, SessionLocal
-from models import Village, User, Indicator, IndicatorValue, Score, RoleEnum, KategoriEnum, StatusVerifikasiEnum
+from models import Village, User, Indicator, IndicatorValue, Score, CitizenReport, RoleEnum, KategoriEnum, StatusVerifikasiEnum
 from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
@@ -62,7 +62,7 @@ def seed_data():
     if db.query(User).count() == 0:
         admin_user = User(
             username="admin",
-            email="admin@dpmd.go.id",
+            email="admin@kabupaten.go.id",
             role=RoleEnum.admin,
             hashed_password=pwd_context.hash("admin123")
         )
@@ -77,21 +77,91 @@ def seed_data():
         db.commit()
         print("Berhasil menambahkan default user: admin & operator desa.")
 
-    # 4. Seed Pending Indicator Submissions for verification demo
-    if db.query(IndicatorValue).count() == 0:
+    # 4. Seed Indicator Submissions (populate for all villages if count < 10)
+    if db.query(IndicatorValue).count() < 10:
         sample_values = [
-            IndicatorValue(village_id=1, indicator_id=1, nilai=12.0, periode="2026", status=StatusVerifikasiEnum.verified, submitted_by=2),
-            IndicatorValue(village_id=1, indicator_id=7, nilai=8.5, periode="2026", status=StatusVerifikasiEnum.pending, submitted_by=2),
-            IndicatorValue(village_id=1, indicator_id=5, nilai=2.0, periode="2026", status=StatusVerifikasiEnum.pending, submitted_by=2),
-            IndicatorValue(village_id=2, indicator_id=9, nilai=3.0, periode="2026", status=StatusVerifikasiEnum.pending, submitted_by=2),
-            IndicatorValue(village_id=3, indicator_id=10, nilai=65.0, periode="2026", status=StatusVerifikasiEnum.pending, submitted_by=2),
+            # Desa Sukamaju (village_id=1)
+            IndicatorValue(village_id=1, indicator_id=1, nilai=12.0, periode="2026", status=StatusVerifikasiEnum.verified, catatan="Telah diverifikasi sesuai data Dinkes Kab. Bogor.", submitted_name="Sari Wulandari (Kaur Kesra)", submitted_by=2),
+            IndicatorValue(village_id=1, indicator_id=2, nilai=8.0, periode="2026", status=StatusVerifikasiEnum.verified, catatan="Data tenaga medis tervalidasi IBI & IDI.", submitted_name="Sari Wulandari (Kaur Kesra)", submitted_by=2),
+            IndicatorValue(village_id=1, indicator_id=3, nilai=4.0, periode="2026", status=StatusVerifikasiEnum.verified, catatan="Sesuai data Dapodik Kemendikbud.", submitted_name="Sari Wulandari (Kaur Kesra)", submitted_by=2),
+            IndicatorValue(village_id=1, indicator_id=4, nilai=18.5, periode="2026", status=StatusVerifikasiEnum.verified, catatan="Rasio memadai standar nasional.", submitted_name="Sari Wulandari (Kaur Kesra)", submitted_by=2),
+            IndicatorValue(village_id=1, indicator_id=5, nilai=3.0, periode="2026", status=StatusVerifikasiEnum.pending, catatan="Laporan keuangan BUMDes semester I sedang ditinjau.", submitted_name="Sari Wulandari (Kaur Kesra)", submitted_by=2),
+            IndicatorValue(village_id=1, indicator_id=6, nilai=4.8, periode="2026", status=StatusVerifikasiEnum.pending, catatan="Data Sakernas desa dalam verifikasi.", submitted_name="Sari Wulandari (Kaur Kesra)", submitted_by=2),
+            IndicatorValue(village_id=1, indicator_id=7, nilai=14.5, periode="2026", status=StatusVerifikasiEnum.pending, catatan="Menunggu pengecekan dokumen pembuktian lapangan.", submitted_name="Sari Wulandari (Kaur Kesra)", submitted_by=2),
+            IndicatorValue(village_id=1, indicator_id=8, nilai=92.0, periode="2026", status=StatusVerifikasiEnum.verified, catatan="Cakupan sinyal 4G terkonfirmasi Diskominfo.", submitted_name="Sari Wulandari (Kaur Kesra)", submitted_by=2),
+            IndicatorValue(village_id=1, indicator_id=9, nilai=2.0, periode="2026", status=StatusVerifikasiEnum.rejected, catatan="Mohon lengkapi dokumen sertifikat TPS3R.", submitted_name="Sari Wulandari (Kaur Kesra)", submitted_by=2),
+            IndicatorValue(village_id=1, indicator_id=10, nilai=88.5, periode="2026", status=StatusVerifikasiEnum.verified, catatan="Sesuai uji laboratorium air bersih PAMDes.", submitted_name="Sari Wulandari (Kaur Kesra)", submitted_by=2),
+            IndicatorValue(village_id=1, indicator_id=11, nilai=2.0, periode="2026", status=StatusVerifikasiEnum.pending, catatan="Menunggu survei lokasi jalur evakuasi.", submitted_name="Sari Wulandari (Kaur Kesra)", submitted_by=2),
+            IndicatorValue(village_id=1, indicator_id=12, nilai=3.0, periode="2026", status=StatusVerifikasiEnum.verified, catatan="Sesuai laporan BPBD Kabupaten.", submitted_name="Sari Wulandari (Kaur Kesra)", submitted_by=2),
+            IndicatorValue(village_id=1, indicator_id=13, nilai=0.785, periode="2026", status=StatusVerifikasiEnum.verified, catatan="Status Desa Maju berdasarkan IDM Kemendesa.", submitted_name="Sari Wulandari (Kaur Kesra)", submitted_by=2),
+            IndicatorValue(village_id=1, indicator_id=14, nilai=82.0, periode="2026", status=StatusVerifikasiEnum.pending, catatan="Berita acara Musrenbangdes terlampir.", submitted_name="Sari Wulandari (Kaur Kesra)", submitted_by=2),
+            IndicatorValue(village_id=1, indicator_id=15, nilai=4.0, periode="2026", status=StatusVerifikasiEnum.verified, catatan="SK Karang Taruna aktif.", submitted_name="Sari Wulandari (Kaur Kesra)", submitted_by=2),
+            IndicatorValue(village_id=1, indicator_id=16, nilai=1.0, periode="2026", status=StatusVerifikasiEnum.verified, catatan="Kamtibmas aman terkendali (Babinsa/Bhabinkamtibmas).", submitted_name="Sari Wulandari (Kaur Kesra)", submitted_by=2),
+
+            # Desa Mekarjaya (village_id=2)
+            IndicatorValue(village_id=2, indicator_id=1, nilai=8.0, periode="2026", status=StatusVerifikasiEnum.verified, catatan="Data posyandu lengkap.", submitted_name="Hendra Pratama (Sekdes)", submitted_by=2),
+            IndicatorValue(village_id=2, indicator_id=5, nilai=2.0, periode="2026", status=StatusVerifikasiEnum.pending, catatan="Sedang audit pembukuan unit usaha simpan pinjam.", submitted_name="Hendra Pratama (Sekdes)", submitted_by=2),
+            IndicatorValue(village_id=2, indicator_id=7, nilai=11.2, periode="2026", status=StatusVerifikasiEnum.pending, catatan="Pekerjaan rabat beton dusun 3 selesai.", submitted_name="Hendra Pratama (Sekdes)", submitted_by=2),
+            IndicatorValue(village_id=2, indicator_id=9, nilai=3.0, periode="2026", status=StatusVerifikasiEnum.pending, catatan="Menunggu konfirmasi Dinas Lingkungan Hidup.", submitted_name="Hendra Pratama (Sekdes)", submitted_by=2),
+
+            # Desa Tegalwaru (village_id=3)
+            IndicatorValue(village_id=3, indicator_id=1, nilai=14.0, periode="2026", status=StatusVerifikasiEnum.verified, catatan="Puskesmas pembantu aktif beroperasi.", submitted_name="Asep Saepudin (Operator)", submitted_by=2),
+            IndicatorValue(village_id=3, indicator_id=10, nilai=65.0, periode="2026", status=StatusVerifikasiEnum.pending, catatan="Perlu kelengkapan foto debit air pipanisasi sumur bor.", submitted_name="Asep Saepudin (Operator)", submitted_by=2),
         ]
         db.add_all(sample_values)
         db.commit()
         print(f"Berhasil menambahkan {len(sample_values)} data indikator sample.")
+
+    # 5. Seed Citizen Reports if empty
+    if db.query(CitizenReport).count() < 3:
+        reports_data = [
+            CitizenReport(
+                village_id=1,
+                village_name="Desa Sukamaju",
+                kecamatan="Cisarua",
+                cat_id=4,
+                title="Jalan Rusak & Berlubang di RW 03 Menuju Sentra Sayur",
+                description="Akses jalan utama dusun mengalami kerusakan parah pasca hujan deras. Petani kesulitan mengangkut hasil panen ke pasar induk Cisarua.",
+                location="Jl. Babakan Dusun 2, RW 03",
+                author="Warga RT 02",
+                status="ditindaklanjuti",
+                upvotes=24,
+                response_note="Telah dimasukkan ke RKPDes perubahan 2026 untuk perbaikan rabat beton."
+            ),
+            CitizenReport(
+                village_id=1,
+                village_name="Desa Sukamaju",
+                kecamatan="Cisarua",
+                cat_id=1,
+                title="Perlengkapan Posyandu Melati Kurang Memadai",
+                description="Timbangan bayi dan alat ukur stunting di Posyandu Melati 3 perlu penggantian untuk akurasi data penimbangan bulanan.",
+                location="Posyandu Melati 3, RW 01",
+                author="Kader Posyandu",
+                status="ditinjau",
+                upvotes=18,
+                response_note="Usulan pengadaan alat antropometri standar Kemenkes sedang diverifikasi Kaur Kesra."
+            ),
+            CitizenReport(
+                village_id=2,
+                village_name="Desa Mekarjaya",
+                kecamatan="Cisarua",
+                cat_id=5,
+                title="Penumpukan Sampah di Dekat Sungai Ciliwung Hulu",
+                description="Perlu penambahan TPS terpadu dan armada gerobak sampah agar warga tidak membuang sampah ke aliran sungai.",
+                location="Bantaran Sungai RW 04",
+                author="Komunitas Peduli Lingkungan",
+                status="terkirim",
+                upvotes=31,
+                response_note=None
+            )
+        ]
+        db.add_all(reports_data)
+        db.commit()
+        print(f"Berhasil menambahkan {len(reports_data)} laporan warga.")
 
     db.close()
     print("Database seeding selesai!")
 
 if __name__ == "__main__":
     seed_data()
+
