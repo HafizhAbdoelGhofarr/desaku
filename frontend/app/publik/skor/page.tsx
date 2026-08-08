@@ -24,12 +24,14 @@ import {
   ChevronRight, 
   BarChart3, 
   MessageCircle, 
-  AlertCircle 
+  AlertCircle,
+  Map
 } from "lucide-react";
+import VillageMap from "@/components/VillageMap";
 
 export default function PublikSkorPage() {
   // Navigation tab
-  const [activeTab, setActiveTab] = useState<"skor" | "suara">("skor");
+  const [activeTab, setActiveTab] = useState<"skor" | "peta" | "suara">("skor");
 
   // Filters for Skor
   const [searchQuery, setSearchQuery] = useState("");
@@ -177,22 +179,34 @@ export default function PublikSkorPage() {
 
       {/* Main Tab Navigator */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-200 pb-4">
-        <div className="flex items-center gap-2 p-1.5 bg-slate-200/70 rounded-2xl w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-200/70 rounded-2xl w-full sm:w-auto">
           <button
             onClick={() => setActiveTab("skor")}
-            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
               activeTab === "skor"
                 ? "bg-white text-emerald-900 shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
             <BarChart3 className="w-4 h-4" />
-            <span>Peringkat & Skor Desa</span>
+            <span>Peringkat & Kartu Desa</span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab("peta")}
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
+              activeTab === "peta"
+                ? "bg-white text-emerald-900 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Map className="w-4 h-4" />
+            <span>Peta Spasial ({filteredVillages.length})</span>
           </button>
 
           <button
             onClick={() => setActiveTab("suara")}
-            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm transition-all ${
+            className={`flex-1 sm:flex-initial flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
               activeTab === "suara"
                 ? "bg-white text-emerald-900 shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
@@ -214,6 +228,60 @@ export default function PublikSkorPage() {
           </button>
         )}
       </div>
+
+      {/* TAB 2: PETA SPASIAL KETAHANAN DESA */}
+      {activeTab === "peta" && (
+        <div className="space-y-6">
+          {/* Quick Filter Bar */}
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2 text-sm text-slate-700">
+              <MapPin className="w-5 h-5 text-emerald-600" />
+              <span className="font-bold">Sebaran Geografis Ketahanan Desa</span>
+              <span className="text-xs text-slate-400">({filteredVillages.length} Desa Terpetakan)</span>
+            </div>
+
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <select
+                value={selectedKecamatan}
+                onChange={(e) => setSelectedKecamatan(e.target.value)}
+                className="bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              >
+                <option value="all">Semua Kecamatan</option>
+                {kecamatans.map((kec) => (
+                  <option key={kec} value={kec}>
+                    Kec. {kec}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <VillageMap
+              villages={filteredVillages}
+              onSelectVillage={(v) => setSelectedVillage(v)}
+              height="550px"
+            />
+            
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs text-slate-500">
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Baik (&ge;70)
+                </span>
+                <span className="flex items-center gap-1.5 font-medium">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Sedang (40-69)
+                </span>
+                <span className="flex items-center gap-1.5 font-medium">
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Rendah (&lt;40)
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 italic">
+                *Klik marker pin desa untuk melihat rincian 8 pilar dan membuka modal data resmi.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* TAB 1: SKOR & PERINGKAT DESA */}
       {activeTab === "skor" && (

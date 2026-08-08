@@ -30,56 +30,84 @@ export function getStatusLabel(status: ScoreStatus) {
   return { merah: "Rendah", kuning: "Sedang", hijau: "Baik" }[status];
 }
 
+export interface Village {
+  id: string;
+  name: string;
+  kecamatan: string;
+  population: number;
+  overallScore: number;
+  scores: number[];
+  dataCompletion: number;
+  latitude: number;
+  longitude: number;
+}
+
 // scores[0..7] → urutan 8 kategori: Kesehatan, Pendidikan, Ekonomi, Infrastruktur,
 //                                    Ketahanan Bencana, Lingkungan, Sosial, Tata Kelola
-export const VILLAGES = [
+export const VILLAGES: Village[] = [
   {
     id: "v1", name: "Desa Sukamaju", kecamatan: "Ciawi", population: 3240,
     overallScore: 78,
     scores: [85, 82, 75, 80, 72, 83, 76, 73],
     dataCompletion: 94,
+    latitude: -6.6582,
+    longitude: 106.8432,
   },
   {
     id: "v2", name: "Desa Cibeureum", kecamatan: "Cisarua", population: 2890,
     overallScore: 54,
     scores: [58, 55, 52, 56, 48, 60, 52, 53],
     dataCompletion: 72,
+    latitude: -6.7025,
+    longitude: 106.9451,
   },
   {
     id: "v3", name: "Desa Tegalwaru", kecamatan: "Caringin", population: 4120,
     overallScore: 38,
     scores: [40, 38, 35, 38, 32, 42, 38, 35],
     dataCompletion: 58,
+    latitude: -6.6854,
+    longitude: 106.8210,
   },
   {
     id: "v4", name: "Desa Pabuaran", kecamatan: "Ciawi", population: 1870,
     overallScore: 67,
     scores: [72, 68, 65, 70, 60, 72, 65, 64],
     dataCompletion: 88,
+    latitude: -6.6431,
+    longitude: 106.8524,
   },
   {
     id: "v5", name: "Desa Wargajaya", kecamatan: "Sukaraja", population: 3450,
     overallScore: 82,
     scores: [88, 85, 80, 84, 76, 86, 80, 77],
     dataCompletion: 97,
+    latitude: -6.5812,
+    longitude: 106.8398,
   },
   {
     id: "v6", name: "Desa Bojong Murni", kecamatan: "Caringin", population: 2210,
     overallScore: 45,
     scores: [48, 45, 42, 46, 38, 50, 44, 42],
     dataCompletion: 65,
+    latitude: -6.6987,
+    longitude: 106.8152,
   },
   {
     id: "v7", name: "Desa Ciderum", kecamatan: "Sukaraja", population: 2780,
     overallScore: 61,
     scores: [65, 62, 58, 63, 55, 66, 60, 58],
     dataCompletion: 81,
+    latitude: -6.5945,
+    longitude: 106.8290,
   },
   {
     id: "v8", name: "Desa Gunung Bunder", kecamatan: "Pamijahan", population: 1950,
     overallScore: 29,
     scores: [32, 28, 26, 32, 24, 34, 28, 28],
     dataCompletion: 44,
+    latitude: -6.6712,
+    longitude: 106.7015,
   },
 ];
 
@@ -233,87 +261,116 @@ export const AI_RECOMMENDATIONS = [
 
 export interface CitizenReport {
   id: string;
+  villageId?: string;
   village: string;
+  villageName?: string;
   kecamatan: string;
   catId: number;
+  category?: string;
   title: string;
   description: string;
   location: string;
   author: string;
   submittedAt: string;
+  createdAt?: string;
   status: "terkirim" | "ditinjau" | "ditindaklanjuti";
   responseNote?: string;
+  adminResponse?: string;
   upvotes: number;
 }
 
 export const CITIZEN_REPORTS: CitizenReport[] = [
   {
     id: "rep-1",
+    villageId: "v1",
     village: "Desa Sukamaju",
+    villageName: "Desa Sukamaju",
     kecamatan: "Ciawi",
     catId: 4, // Infrastruktur
+    category: "infrastruktur",
     title: "Jembatan Penghubung Dusun 2 dan Dusun 3 Rusak Terkikis Air",
     description: "Jembatan bambu darurat sudah mulai lapuk saat musim hujan, membahayakan anak sekolah dan petani pengangkut sayur. Mohon diprioritaskan perbaikan permanen.",
     location: "Dusun 2 RT 04 / RW 02",
     author: "Bapak Hendra (Tokoh Warga)",
     submittedAt: "06 Agu 2026",
+    createdAt: "06 Agu 2026",
     status: "ditindaklanjuti",
     responseNote: "Sudah dimasukkan dalam musyawarah RKPDes 2026 tahap 2 dan disurvei oleh tim Administrator Kabupaten.",
+    adminResponse: "Sudah dimasukkan dalam musyawarah RKPDes 2026 tahap 2 dan disurvei oleh tim Administrator Kabupaten.",
     upvotes: 42,
   },
   {
     id: "rep-2",
+    villageId: "v3",
     village: "Desa Bojong Murni",
+    villageName: "Desa Bojong Murni",
     kecamatan: "Caringin",
     catId: 1, // Kesehatan
+    category: "kesehatan",
     title: "Kekurangan Suplemen Vitamin & Alat Timbang Digital di Posyandu Melati",
     description: "Untuk pencegahan stunting balita di RW 03, alat timbang sering eror dan persediaan PMT biskuit gizi habis sejak bulan lalu.",
     location: "Posyandu Melati RW 03",
     author: "Ibu Siti Fatimah (Kader Posyandu)",
     submittedAt: "05 Agu 2026",
+    createdAt: "05 Agu 2026",
     status: "ditinjau",
     responseNote: "Pemerintah desa sedang mengoordinasikan pengadaan alat bersama Puskesmas Kecamatan.",
+    adminResponse: "Pemerintah desa sedang mengoordinasikan pengadaan alat bersama Puskesmas Kecamatan.",
     upvotes: 38,
   },
   {
     id: "rep-3",
+    villageId: "v6",
     village: "Desa Tegalwaru",
+    villageName: "Desa Tegalwaru",
     kecamatan: "Ciampea",
     catId: 3, // Ekonomi
+    category: "ekonomi",
     title: "Usulan Pelatihan Pemasaran Digital untuk Pengrajin Keramik Lokal",
     description: "Banyak pemuda di RW 01 memiliki potensi kerajinan tanah liat dan olahan singkong tapi kesulitan memasarkan secara online ke luar kota.",
     location: "Sentra Kerajinan RW 01",
     author: "Rian Pratama",
     submittedAt: "04 Agu 2026",
+    createdAt: "04 Agu 2026",
     status: "ditindaklanjuti",
     responseNote: "Diagendakan pelatihan digital marketing bekerjasama dengan BUMDes pada bulan depan.",
+    adminResponse: "Diagendakan pelatihan digital marketing bekerjasama dengan BUMDes pada bulan depan.",
     upvotes: 27,
   },
   {
     id: "rep-4",
+    villageId: "v1",
     village: "Desa Sukamaju",
+    villageName: "Desa Sukamaju",
     kecamatan: "Ciawi",
     catId: 6, // Lingkungan
+    category: "lingkungan",
     title: "Tumpukan Sampah Liar di Dekat Saluran Irigasi Sawah",
     description: "Warga luar desa sering membuang sampah kantong plastik sembarangan di pinggir jalan irigasi, menyumbat aliran air ke 15 hektar sawah.",
     location: "Jl. Irigasi Blok Barat RT 02",
     author: "Warga Anonim",
     submittedAt: "02 Agu 2026",
+    createdAt: "02 Agu 2026",
     status: "terkirim",
     upvotes: 19,
   },
   {
     id: "rep-5",
+    villageId: "v4",
     village: "Desa Gunung Bunder 1",
+    villageName: "Desa Gunung Bunder 1",
     kecamatan: "Pamijahan",
     catId: 5, // Ketahanan Bencana
+    category: "bencana",
     title: "Pemasangan Rambu Jalur Evakuasi dan Talud Tebing Rawan Longsor",
     description: "Tebing di samping jalan utama RT 05 sudah mulai retak 5 cm setelah hujan deras berturut-turut. Butuh penahan tebing sementara dan rambu peringatan.",
     location: "Kp. Gunung Bunder Atas RT 05",
     author: "Agus S. (Relawan Desa)",
     submittedAt: "01 Agu 2026",
+    createdAt: "01 Agu 2026",
     status: "ditindaklanjuti",
     responseNote: "BPBD dan Tim Siaga Bencana Desa telah memasang terpal penahan dan barikade jalan.",
+    adminResponse: "BPBD dan Tim Siaga Bencana Desa telah memasang terpal penahan dan barikade jalan.",
     upvotes: 56,
   },
 ];

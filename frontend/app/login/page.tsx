@@ -8,7 +8,7 @@ import type { Role } from "@/lib/auth";
 
 export default function LoginPage() {
   const { login, isLoading } = useAuth();
-  const [selectedRole, setSelectedRole] = useState<Role>("dpmd");
+  const [selectedRole, setSelectedRole] = useState<Role>("admin");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -66,15 +66,15 @@ export default function LoginPage() {
             <div className="grid grid-cols-2 gap-4">
               <button
                 type="button"
-                onClick={() => setSelectedRole("dpmd")}
+                onClick={() => setSelectedRole("admin")}
                 className={`p-6 rounded-2xl border-2 text-left transition-all ${
-                  selectedRole === "dpmd" 
+                  selectedRole === "admin" || selectedRole === "dpmd"
                     ? "border-emerald-600 bg-emerald-50 ring-4 ring-emerald-600/10" 
                     : "border-slate-100 hover:border-slate-300 hover:bg-slate-50"
                 }`}
               >
-                <ShieldCheck className={`w-8 h-8 mb-4 ${selectedRole === "dpmd" ? "text-emerald-600" : "text-slate-400"}`} />
-                <div className={`font-semibold ${selectedRole === "dpmd" ? "text-emerald-900" : "text-slate-700"}`}>Administrator</div>
+                <ShieldCheck className={`w-8 h-8 mb-4 ${selectedRole === "admin" || selectedRole === "dpmd" ? "text-emerald-600" : "text-slate-400"}`} />
+                <div className={`font-semibold ${selectedRole === "admin" || selectedRole === "dpmd" ? "text-emerald-900" : "text-slate-700"}`}>Administrator</div>
                 <div className="text-xs text-slate-500 mt-1">Tingkat Kabupaten</div>
               </button>
 

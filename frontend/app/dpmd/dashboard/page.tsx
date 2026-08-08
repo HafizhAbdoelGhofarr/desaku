@@ -4,10 +4,12 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { VILLAGES, getStatus, getStatusColor } from "@/lib/data/sdgsData";
-import { MapPin, TrendingUp, AlertTriangle, CheckCircle2, Filter, Building2 } from "lucide-react";
+import { MapPin, TrendingUp, AlertTriangle, CheckCircle2, Filter, Building2, Map, BarChart3 } from "lucide-react";
+import VillageMap from "@/components/VillageMap";
 
 export default function DpmdDashboard() {
   const [selectedKecamatan, setSelectedKecamatan] = useState<string>("all");
+  const [viewMode, setViewMode] = useState<"map" | "chart">("map");
 
   // Extract unique kecamatans
   const kecamatans = useMemo(() => {
@@ -109,47 +111,86 @@ export default function DpmdDashboard() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        {/* Chart Section */}
+        {/* Visual Map & Chart Section */}
         <div className="xl:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="text-xl font-bold text-slate-900">Peringkat Ketahanan Desa</h2>
+              <h2 className="text-xl font-bold text-slate-900">
+                {viewMode === "map" ? "Peta Spasial Ketahanan Desa" : "Peringkat Ketahanan Desa"}
+              </h2>
               <p className="text-sm text-slate-500">
                 {selectedKecamatan === "all"
-                  ? "Skor komposit keseluruhan desa di Kabupaten"
+                  ? "Sebaran 8 pilar dan tingkat ketahanan seluruh desa di Kabupaten"
                   : `Menampilkan desa di wilayah Kecamatan ${selectedKecamatan}`}
               </p>
             </div>
 
-            {selectedKecamatan !== "all" && (
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-2xl shrink-0">
               <button
-                onClick={() => setSelectedKecamatan("all")}
-                className="text-xs font-bold text-emerald-600 hover:underline"
+                onClick={() => setViewMode("map")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  viewMode === "map"
+                    ? "bg-white text-emerald-800 shadow-sm"
+                    : "text-slate-500 hover:text-slate-800"
+                }`}
               >
-                Tampilkan Semua
+                <Map className="w-3.5 h-3.5" />
+                Peta Spasial
               </button>
-            )}
+              <button
+                onClick={() => setViewMode("chart")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                  viewMode === "chart"
+                    ? "bg-white text-emerald-800 shadow-sm"
+                    : "text-slate-500 hover:text-slate-800"
+                }`}
+              >
+                <BarChart3 className="w-3.5 h-3.5" />
+                Grafik Batang
+              </button>
+            </div>
           </div>
 
-          <div className="h-[400px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 30, left: 40, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
-                <XAxis type="number" domain={[0, 100]} stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={13} fontWeight={500} tickLine={false} axisLine={false} />
-                <Tooltip 
-                  cursor={{fill: "#f8fafc"}} 
-                  contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} 
-                />
-                <Bar dataKey="score" radius={[0, 8, 8, 0]} barSize={24}>
-                  {chartData.map((entry, index) => {
-                    const colors = getStatusColor(entry.status);
-                    return <Cell key={`cell-${index}`} fill={colors.dot} />;
-                  })}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          {viewMode === "map" ? (
+            <div className="space-y-3">
+              <VillageMap villages={displayedVillages} height="430px" />
+              <div className="flex items-center justify-between text-xs text-slate-500 pt-2 px-1">
+                <span className="flex items-center gap-4">
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Baik (&ge;70)
+                  </span>
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Sedang (40-69)
+                  </span>
+                  <span className="flex items-center gap-1.5 font-medium">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500"></span> Rendah (&lt;40)
+                  </span>
+                </span>
+                <span className="text-[11px] text-slate-400 font-medium">*Klik pin desa untuk rincian 8 pilar</span>
+              </div>
+            </div>
+          ) : (
+            <div className="h-[430px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} layout="vertical" margin={{ top: 0, right: 30, left: 40, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f1f5f9" />
+                  <XAxis type="number" domain={[0, 100]} stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={13} fontWeight={500} tickLine={false} axisLine={false} />
+                  <Tooltip 
+                    cursor={{fill: "#f8fafc"}} 
+                    contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} 
+                  />
+                  <Bar dataKey="score" radius={[0, 8, 8, 0]} barSize={24}>
+                    {chartData.map((entry, index) => {
+                      const colors = getStatusColor(entry.status);
+                      return <Cell key={`cell-${index}`} fill={colors.dot} />;
+                    })}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
 
         {/* Quick Action / Alerts */}

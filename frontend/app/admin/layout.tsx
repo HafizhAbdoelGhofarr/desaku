@@ -3,19 +3,29 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { LayoutDashboard, CheckSquare, LineChart, TrendingUp, LogOut, Leaf, Sparkles, MessageCircle } from "lucide-react";
+import { 
+  LayoutDashboard, 
+  CheckSquare, 
+  LineChart, 
+  TrendingUp, 
+  LogOut, 
+  Leaf, 
+  Sparkles, 
+  MessageCircle,
+  Building2
+} from "lucide-react";
 
-export default function DpmdLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
 
   const navItems = [
-    { name: "Dashboard", href: "/dpmd/dashboard", icon: LayoutDashboard },
-    { name: "Verifikasi Data", href: "/dpmd/verification", icon: CheckSquare },
-    { name: "Perbandingan Desa", href: "/dpmd/comparison", icon: LineChart },
-    { name: "What-If Analysis", href: "/dpmd/whatif", icon: TrendingUp },
-    { name: "Rekomendasi AI", href: "/dpmd/recommendations", icon: Sparkles },
-    { name: "Suara Warga", href: "/dpmd/reports", icon: MessageCircle },
+    { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard },
+    { name: "Verifikasi Data", href: "/admin/verification", icon: CheckSquare },
+    { name: "Perbandingan Desa", href: "/admin/comparison", icon: LineChart },
+    { name: "What-If Analysis", href: "/admin/whatif", icon: TrendingUp },
+    { name: "Rekomendasi AI", href: "/admin/recommendations", icon: Sparkles },
+    { name: "Suara Warga", href: "/admin/reports", icon: MessageCircle },
   ];
 
   return (
@@ -32,7 +42,12 @@ export default function DpmdLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         <div className="px-6 py-6">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Menu Administrator</p>
+          <div className="flex items-center gap-2 mb-4">
+            <Building2 className="w-4 h-4 text-emerald-400" />
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              Administrator Kabupaten
+            </p>
+          </div>
           <nav className="space-y-2">
             {navItems.map((item) => {
               const isActive = pathname.startsWith(item.href);
@@ -43,12 +58,12 @@ export default function DpmdLayout({ children }: { children: React.ReactNode }) 
                   href={item.href}
                   className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                     isActive
-                      ? "bg-emerald-600 text-white shadow-md shadow-emerald-900/20"
-                      : "hover:bg-slate-800 hover:text-white"
+                      ? "bg-emerald-600 text-white shadow-md shadow-emerald-900/20 font-bold"
+                      : "hover:bg-slate-800 hover:text-white font-medium"
                   }`}
                 >
                   <Icon className="w-5 h-5" />
-                  <span className="font-medium">{item.name}</span>
+                  <span>{item.name}</span>
                 </Link>
               );
             })}
@@ -61,8 +76,8 @@ export default function DpmdLayout({ children }: { children: React.ReactNode }) 
               {user?.name?.charAt(0) || "A"}
             </div>
             <div className="overflow-hidden">
-              <p className="text-sm font-semibold text-white truncate">{user?.name}</p>
-              <p className="text-xs text-slate-500 truncate">{user?.email}</p>
+              <p className="text-sm font-semibold text-white truncate">{user?.name || "Administrator"}</p>
+              <p className="text-xs text-slate-500 truncate">{user?.email || "Tingkat Kabupaten"}</p>
             </div>
           </div>
           <button
@@ -77,10 +92,10 @@ export default function DpmdLayout({ children }: { children: React.ReactNode }) 
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Mobile Header (simplified) */}
+        {/* Mobile Header */}
         <header className="md:hidden h-16 bg-white border-b flex items-center justify-between px-4">
-          <div className="font-bold">Sistem Desa Ku</div>
-          <button onClick={logout} className="text-sm text-rose-500">Logout</button>
+          <div className="font-bold text-slate-900">Administrator Kabupaten</div>
+          <button onClick={logout} className="text-sm text-rose-500 font-bold">Logout</button>
         </header>
 
         {/* Scrollable Content */}

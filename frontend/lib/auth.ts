@@ -1,4 +1,4 @@
-export type Role = "dpmd" | "desa" | "publik";
+export type Role = "admin" | "dpmd" | "desa" | "publik";
 
 export interface AuthUser {
   id: string;
@@ -6,6 +6,7 @@ export interface AuthUser {
   email: string;
   role: Role;
   village?: string;
+  villageId?: string;
 }
 
 const TOKEN_KEY = "sdk_auth_token";
@@ -32,12 +33,18 @@ export function clearSession() {
 }
 
 export function getRoleDashboard(role: Role): string {
-  return { dpmd: "/dpmd/dashboard", desa: "/desa/summary", publik: "/publik/skor" }[role];
+  return { 
+    admin: "/admin/dashboard", 
+    dpmd: "/admin/dashboard", 
+    desa: "/desa/summary", 
+    publik: "/publik/skor" 
+  }[role];
 }
 
 const MOCK_USERS: Record<Role, AuthUser> = {
-  dpmd:   { id: "u1", name: "Budi Santoso",    email: "budi@admin.go.id",  role: "dpmd" },
-  desa:   { id: "u2", name: "Sari Wulandari",  email: "sari@desa.go.id",   role: "desa", village: "Desa Sukamaju" },
+  admin:  { id: "u1", name: "Budi Santoso",    email: "budi@admin.go.id",  role: "admin" },
+  dpmd:   { id: "u1", name: "Budi Santoso",    email: "budi@admin.go.id",  role: "admin" },
+  desa:   { id: "u2", name: "Sari Wulandari",  email: "sari@desa.go.id",   role: "desa", village: "Desa Sukamaju", villageId: "v1" },
   publik: { id: "u3", name: "Warga",            email: "",                  role: "publik" },
 };
 
