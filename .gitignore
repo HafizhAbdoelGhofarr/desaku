@@ -10,3 +10,4 @@ frontend/next-env.d.ts
 reference/
 graphify-out/
 backend/.env
+.gitignore

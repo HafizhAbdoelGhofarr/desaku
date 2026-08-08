@@ -48,7 +48,22 @@ const MOCK_USERS: Record<Role, AuthUser> = {
   publik: { id: "u3", name: "Warga",            email: "",                  role: "publik" },
 };
 
-export async function mockLogin(role: Role): Promise<{ token: string; user: AuthUser }> {
+export async function mockLogin(
+  role: Role, 
+  villageId?: string, 
+  villageName?: string, 
+  email?: string
+): Promise<{ token: string; user: AuthUser }> {
   await new Promise((r) => setTimeout(r, 400));
-  return { token: `mock-jwt-${role}-${Date.now()}`, user: MOCK_USERS[role] };
+  const base = MOCK_USERS[role];
+  return { 
+    token: `mock-jwt-${role}-${Date.now()}`, 
+    user: {
+      ...base,
+      email: email || base.email,
+      village: villageName || base.village,
+      villageId: villageId || base.villageId,
+    } 
+  };
 }
+
