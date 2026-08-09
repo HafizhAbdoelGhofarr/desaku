@@ -1,1 +1,13 @@
-export { default } from "@/app/dpmd/dashboard/page";
+"use client";
+
+import ProtectedRoute from "@/lib/components/ProtectedRoute";
+import AdminPage from "@/app/dpmd/dashboard/page";
+
+export default function Wrapped() {
+  return (
+    <ProtectedRoute>
+      <AdminPage />
+    </ProtectedRoute>
+  );
+}
+
