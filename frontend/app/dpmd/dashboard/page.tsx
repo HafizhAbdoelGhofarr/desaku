@@ -1,16 +1,14 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { 
-  VILLAGES, 
   getStatus, 
-  getStatusColor, 
-  getProvinces, 
-  getKabupatens, 
-  getKecamatans 
+  getStatusColor,
+  type Village
 } from "@/lib/data/sdgsData";
+import { api } from "@/lib/api";
 import { 
   MapPin, 
   TrendingUp, 
@@ -25,17 +23,42 @@ import {
 import VillageMap from "@/components/VillageMap";
 
 export default function DpmdDashboard() {
-  const provinces = useMemo(() => getProvinces(), []);
+  const [villages, setVillages] = useState<Village[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchVillages() {
+      try {
+        setIsLoading(true);
+        // Ensure you have an api.get method or use standard fetch
+        // Since we see api is used, we'll try api.get
+        const res = await api.get("/villages/summary");
+        setVillages(res);
+      } catch (error) {
+        console.error("Failed to fetch villages:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchVillages();
+  }, []);
+
   const [selectedProvince, setSelectedProvince] = useState<string>("all");
+  const provinces = useMemo(() => Array.from(new Set(villages.map(v => v.provinsi))), [villages]);
   
   const availableKabupatens = useMemo(() => {
-    return getKabupatens(selectedProvince);
-  }, [selectedProvince]);
+    let list = villages;
+    if (selectedProvince !== "all") list = list.filter(v => v.provinsi === selectedProvince);
+    return Array.from(new Set(list.map(v => v.kabupaten)));
+  }, [villages, selectedProvince]);
   const [selectedKabupaten, setSelectedKabupaten] = useState<string>("all");
 
   const availableKecamatans = useMemo(() => {
-    return getKecamatans(selectedProvince, selectedKabupaten);
-  }, [selectedProvince, selectedKabupaten]);
+    let list = villages;
+    if (selectedProvince !== "all") list = list.filter(v => v.provinsi === selectedProvince);
+    if (selectedKabupaten !== "all") list = list.filter(v => v.kabupaten === selectedKabupaten);
+    return Array.from(new Set(list.map(v => v.kecamatan)));
+  }, [villages, selectedProvince, selectedKabupaten]);
   const [selectedKecamatan, setSelectedKecamatan] = useState<string>("all");
 
   const [viewMode, setViewMode] = useState<"map" | "chart">("map");
@@ -55,13 +78,13 @@ export default function DpmdDashboard() {
 
   // Filtered villages
   const displayedVillages = useMemo(() => {
-    return VILLAGES.filter((v) => {
+    return villages.filter((v) => {
       const matchProv = selectedProvince === "all" || v.provinsi === selectedProvince;
       const matchKab = selectedKabupaten === "all" || v.kabupaten === selectedKabupaten;
       const matchKec = selectedKecamatan === "all" || v.kecamatan === selectedKecamatan;
       return matchProv && matchKab && matchKec;
     });
-  }, [selectedProvince, selectedKabupaten, selectedKecamatan]);
+  }, [villages, selectedProvince, selectedKabupaten, selectedKecamatan]);
 
   // Aggregate metrics
   const averageScore = useMemo(() => {
@@ -85,6 +108,14 @@ export default function DpmdDashboard() {
         status: getStatus(v.overallScore),
       }));
   }, [displayedVillages]);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-10 max-w-7xl mx-auto">
@@ -169,7 +200,7 @@ export default function DpmdDashboard() {
         <MetricCard 
           title="Desa Terdata" 
           value={`${displayedVillages.length}`} 
-          subtitle={`Dari total ${VILLAGES.length} desa nasional`} 
+          subtitle={`Dari total ${villages.length} desa nasional`} 
           icon={<MapPin className="w-6 h-6 text-blue-600" />} 
           color="blue" 
         />
