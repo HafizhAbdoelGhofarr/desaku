@@ -83,6 +83,10 @@ export const api = {
     }>> => {
       return request("/villages");
     },
+    
+    getSummary: async (): Promise<any[]> => {
+      return request("/villages/summary");
+    },
 
     getById: async (id: number) => {
       return request(`/villages/${id}`);
