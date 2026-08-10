@@ -31,8 +31,8 @@ export default function DpmdDashboard() {
       try {
         setIsLoading(true);
         // Ensure you have an api.get method or use standard fetch
-        // Since we see api is used, we'll try api.get
-        const res = await api.get("/villages/summary");
+        // We use the new api.villages.getSummary()
+        const res = await api.villages.getSummary();
         setVillages(res);
       } catch (error) {
         console.error("Failed to fetch villages:", error);
