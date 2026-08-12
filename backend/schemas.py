@@ -23,6 +23,11 @@ class VillageResponse(VillageBase, OrmBase):
     id: int
     created_at: datetime
 
+class VillageDashboardResponse(VillageResponse):
+    overallScore: float
+    scores: List[float]
+    dataCompletion: float
+
 # User
 class UserBase(BaseModel):
     username: str

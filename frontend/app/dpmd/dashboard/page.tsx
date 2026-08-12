@@ -4,13 +4,10 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { 
-  VILLAGES, 
   getStatus, 
-  getStatusColor, 
-  getProvinces, 
-  getKabupatens, 
-  getKecamatans 
+  getStatusColor 
 } from "@/lib/data/sdgsData";
+import { api } from "@/lib/api";
 import { 
   MapPin, 
   TrendingUp, 
@@ -25,17 +22,33 @@ import {
 import VillageMap from "@/components/VillageMap";
 
 export default function DpmdDashboard() {
-  const provinces = useMemo(() => getProvinces(), []);
+  const [villages, setVillages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.villages.getDashboardStats().then((data) => {
+      // transform id to string for compatibility with existing components if needed, or keep as number
+      // the map component expects id as string in VILLAGES, but we can map it
+      setVillages(data.map(v => ({ ...v, id: String(v.id) })));
+      setLoading(false);
+    }).catch(console.error);
+  }, []);
+
+  const provinces = useMemo(() => Array.from(new Set(villages.map(v => v.provinsi))), [villages]);
   const [selectedProvince, setSelectedProvince] = useState<string>("all");
   
   const availableKabupatens = useMemo(() => {
-    return getKabupatens(selectedProvince);
-  }, [selectedProvince]);
+    const list = selectedProvince === "all" ? villages : villages.filter(v => v.provinsi === selectedProvince);
+    return Array.from(new Set(list.map(v => v.kabupaten)));
+  }, [selectedProvince, villages]);
   const [selectedKabupaten, setSelectedKabupaten] = useState<string>("all");
 
   const availableKecamatans = useMemo(() => {
-    return getKecamatans(selectedProvince, selectedKabupaten);
-  }, [selectedProvince, selectedKabupaten]);
+    let list = villages;
+    if (selectedProvince !== "all") list = list.filter(v => v.provinsi === selectedProvince);
+    if (selectedKabupaten !== "all") list = list.filter(v => v.kabupaten === selectedKabupaten);
+    return Array.from(new Set(list.map(v => v.kecamatan)));
+  }, [selectedProvince, selectedKabupaten, villages]);
   const [selectedKecamatan, setSelectedKecamatan] = useState<string>("all");
 
   const [viewMode, setViewMode] = useState<"map" | "chart">("map");
@@ -55,13 +68,13 @@ export default function DpmdDashboard() {
 
   // Filtered villages
   const displayedVillages = useMemo(() => {
-    return VILLAGES.filter((v) => {
+    return villages.filter((v) => {
       const matchProv = selectedProvince === "all" || v.provinsi === selectedProvince;
       const matchKab = selectedKabupaten === "all" || v.kabupaten === selectedKabupaten;
       const matchKec = selectedKecamatan === "all" || v.kecamatan === selectedKecamatan;
       return matchProv && matchKab && matchKec;
     });
-  }, [selectedProvince, selectedKabupaten, selectedKecamatan]);
+  }, [selectedProvince, selectedKabupaten, selectedKecamatan, villages]);
 
   // Aggregate metrics
   const averageScore = useMemo(() => {
@@ -85,6 +98,14 @@ export default function DpmdDashboard() {
         status: getStatus(v.overallScore),
       }));
   }, [displayedVillages]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-10 max-w-7xl mx-auto">
@@ -169,7 +190,7 @@ export default function DpmdDashboard() {
         <MetricCard 
           title="Desa Terdata" 
           value={`${displayedVillages.length}`} 
-          subtitle={`Dari total ${VILLAGES.length} desa nasional`} 
+          subtitle={`Dari total ${villages.length} desa nasional`} 
           icon={<MapPin className="w-6 h-6 text-blue-600" />} 
           color="blue" 
         />

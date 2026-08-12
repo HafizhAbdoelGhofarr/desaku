@@ -2,12 +2,13 @@
 
 import { useState, useMemo } from "react";
 import { 
-  VILLAGES, 
   CATEGORIES, 
   getStatus, 
   getStatusColor, 
   getStatusLabel 
 } from "@/lib/data/sdgsData";
+import { api } from "@/lib/api";
+import { useEffect } from "react";
 import { 
   LineChart, 
   X, 
@@ -36,18 +37,29 @@ const VILLAGE_COLORS = [
 ];
 
 export default function ComparisonPage() {
-  // Selected villages for comparison (default 2 villages)
-  const [selectedVillageIds, setSelectedVillageIds] = useState<string[]>([
-    VILLAGES[0].id, // Sukamaju (78)
-    VILLAGES[1].id, // Bojong Murni (45)
-  ]);
+  const [villages, setVillages] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedVillageIds, setSelectedVillageIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    api.villages.getDashboardStats().then((data) => {
+      const mapped = data.map(v => ({ ...v, id: String(v.id) }));
+      setVillages(mapped);
+      if (mapped.length >= 2) {
+        setSelectedVillageIds([mapped[0].id, mapped[1].id]);
+      } else if (mapped.length === 1) {
+        setSelectedVillageIds([mapped[0].id]);
+      }
+      setLoading(false);
+    }).catch(console.error);
+  }, []);
 
   // Selected villages objects
   const selectedVillages = useMemo(() => {
     return selectedVillageIds
-      .map((id) => VILLAGES.find((v) => v.id === id))
-      .filter((v): v is typeof VILLAGES[0] => v !== undefined);
-  }, [selectedVillageIds]);
+      .map((id) => villages.find((v) => v.id === id))
+      .filter((v): v is any => v !== undefined);
+  }, [selectedVillageIds, villages]);
 
   // Radar Chart data formatted for Recharts
   const radarData = useMemo(() => {
@@ -114,20 +126,28 @@ export default function ComparisonPage() {
 
   // Quick Preset Handlers
   const handlePresetHighLow = () => {
-    const sorted = [...VILLAGES].sort((a, b) => b.overallScore - a.overallScore);
+    const sorted = [...villages].sort((a, b) => b.overallScore - a.overallScore);
     if (sorted.length >= 2) {
       setSelectedVillageIds([sorted[0].id, sorted[sorted.length - 1].id]);
     }
   };
 
   const handlePresetCiawi = () => {
-    const ciawiVillages = VILLAGES.filter((v) => v.kecamatan === "Ciawi");
+    const ciawiVillages = villages.filter((v) => v.kecamatan === "Ciawi");
     if (ciawiVillages.length >= 2) {
       setSelectedVillageIds(ciawiVillages.slice(0, 3).map((v) => v.id));
-    } else {
-      setSelectedVillageIds([VILLAGES[0].id, VILLAGES[1].id]);
+    } else if (villages.length >= 2) {
+      setSelectedVillageIds([villages[0].id, villages[1].id]);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-12 max-w-6xl mx-auto">
@@ -224,7 +244,7 @@ export default function ComparisonPage() {
                 className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs border border-blue-200 transition-all cursor-pointer focus:outline-none"
               >
                 <option value="">+ Tambah Desa Lain...</option>
-                {VILLAGES.filter((v) => !selectedVillageIds.includes(v.id)).map((v) => (
+                {villages.filter((v) => !selectedVillageIds.includes(v.id)).map((v) => (
                   <option key={v.id} value={v.id}>
                     {v.name} ({v.kecamatan}) — Skor {v.overallScore}
                   </option>
