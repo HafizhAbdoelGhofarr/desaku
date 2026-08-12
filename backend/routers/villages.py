@@ -6,6 +6,8 @@ from database import get_db
 from models import Village, Score, KategoriEnum, IndicatorValue
 from schemas import VillageCreate, VillageResponse, ScoreResponse, VillageSummaryResponse
 from routers.auth import require_role
+from models import KategoriEnum
+
 
 router = APIRouter(prefix="/villages", tags=["villages"])
 

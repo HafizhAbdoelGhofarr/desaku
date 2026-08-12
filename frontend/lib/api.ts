@@ -95,6 +95,22 @@ export const api = {
     getScores: async (id: number) => {
       return request(`/villages/${id}/scores`);
     },
+
+    getDashboardStats: async (): Promise<Array<{
+      id: number;
+      name: string;
+      kecamatan: string;
+      kabupaten: string;
+      provinsi: string;
+      population?: number;
+      latitude?: number;
+      longitude?: number;
+      overallScore: number;
+      scores: number[];
+      dataCompletion: number;
+    }>> => {
+      return request("/villages/dashboard-stats");
+    },
   },
 
   // 3. Indicators & Indicator Values Services
