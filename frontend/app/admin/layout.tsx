@@ -4,17 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { 
-  LayoutDashboard, 
-  CheckSquare, 
-  LineChart, 
-  TrendingUp, 
-  LogOut, 
-  Leaf, 
-  Sparkles, 
-  MessageCircle,
-  Building2
-} from "lucide-react";
+import { LayoutDashboard, CheckSquare, LineChart, TrendingUp, LogOut, Leaf, Sparkles, MessageCircle } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -48,12 +38,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
 
         <div className="px-6 py-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Building2 className="w-4 h-4 text-emerald-400" />
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-              Administrator Kabupaten
-            </p>
-          </div>
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">Menu Administrator</p>
           <nav className="space-y-2">
             {navItems.map((item) => {
               const isActive = pathname.startsWith(item.href);
