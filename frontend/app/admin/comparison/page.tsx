@@ -41,6 +41,16 @@ export default function ComparisonPage() {
   const [villages, setVillages] = useState<Village[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedVillageIds, setSelectedVillageIds] = useState<string[]>([]);
+  const [isComparing, setIsComparing] = useState(false);
+  const [showAI, setShowAI] = useState(false);
+  const [showDetailedMatrix, setShowDetailedMatrix] = useState(false);
+
+  useEffect(() => {
+    if (selectedVillageIds.length === 0) {
+      setIsComparing(false);
+      setShowAI(false);
+    }
+  }, [selectedVillageIds]);
 
   useEffect(() => {
     async function fetchVillages() {
@@ -49,11 +59,6 @@ export default function ComparisonPage() {
         const data = await api.villages.getSummary();
         const mapped = data.map(v => ({ ...v, id: String(v.id) }));
         setVillages(mapped);
-        if (mapped.length >= 2) {
-          setSelectedVillageIds([mapped[0].id, mapped[1].id]);
-        } else if (mapped.length === 1) {
-          setSelectedVillageIds([mapped[0].id]);
-        }
       } catch (error) {
         console.error("Failed to fetch villages:", error);
       } finally {
@@ -133,22 +138,7 @@ export default function ComparisonPage() {
     }
   };
 
-  // Quick Preset Handlers
-  const handlePresetHighLow = () => {
-    const sorted = [...villages].sort((a, b) => b.overallScore - a.overallScore);
-    if (sorted.length >= 2) {
-      setSelectedVillageIds([sorted[0].id, sorted[sorted.length - 1].id]);
-    }
-  };
 
-  const handlePresetCiawi = () => {
-    const ciawiVillages = villages.filter((v) => v.kecamatan === "Ciawi");
-    if (ciawiVillages.length >= 2) {
-      setSelectedVillageIds(ciawiVillages.slice(0, 3).map((v) => v.id));
-    } else if (villages.length >= 2) {
-      setSelectedVillageIds([villages[0].id, villages[1].id]);
-    }
-  };
 
   if (loading) {
     return (
@@ -170,31 +160,15 @@ export default function ComparisonPage() {
             </div>
             <div>
               <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                Perbandingan Multidimensi Desa
+                Perbandingan Desa
               </h1>
               <p className="text-slate-500 mt-0.5">
-                Analisis komparasi *head-to-head* capaian 8 pilar ketahanan untuk mengidentifikasi disparitas wilayah.
+                Bandingkan metrik capaian antar desa.
               </p>
             </div>
           </div>
         </div>
 
-        {/* Quick Presets */}
-        <div className="flex items-center gap-2 self-start md:self-auto">
-          <span className="text-xs font-semibold text-slate-400 uppercase">Preset:</span>
-          <button
-            onClick={handlePresetHighLow}
-            className="px-3 py-1.5 bg-white border border-slate-200 hover:border-blue-400 text-xs font-bold text-slate-700 rounded-xl transition-all shadow-sm"
-          >
-            Tertinggi vs Terendah
-          </button>
-          <button
-            onClick={handlePresetCiawi}
-            className="px-3 py-1.5 bg-white border border-slate-200 hover:border-blue-400 text-xs font-bold text-slate-700 rounded-xl transition-all shadow-sm"
-          >
-            Satu Kecamatan
-          </button>
-        </div>
       </div>
 
       {/* Village Chips Selector Bar */}
@@ -203,10 +177,9 @@ export default function ComparisonPage() {
           <div className="flex items-center gap-2">
             <Scale className="w-4 h-4 text-blue-600" />
             <h2 className="font-bold text-slate-800 text-sm">
-              Desa yang Dibandingkan ({selectedVillages.length}/4 Desa)
+              Pilih Desa ({selectedVillages.length}/4)
             </h2>
           </div>
-          <span className="text-xs text-slate-400">Pilih 2 hingga 4 desa untuk komparasi optimal.</span>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
@@ -262,33 +235,76 @@ export default function ComparisonPage() {
             </div>
           )}
         </div>
+
+        {selectedVillages.length > 0 && !isComparing && (
+          <div className="pt-4 border-t border-slate-100 flex justify-end">
+            <button
+              onClick={() => setIsComparing(true)}
+              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-sm"
+            >
+              Bandingkan Desa
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Disparity Insight AI Highlight */}
-      {disparityAnalysis && (
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 md:p-8 shadow-lg border border-indigo-900/50 relative overflow-hidden">
-          <div className="absolute right-0 bottom-0 translate-x-12 translate-y-12 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-          
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div className="space-y-2 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold border border-indigo-400/30">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Analisis Disparitas Wilayah AI</span>
-              </div>
-              <h3 className="text-xl md:text-2xl font-black text-white">
-                Ketimpangan Tertinggi: {disparityAnalysis.category} (Selisih {disparityAnalysis.gap} Poin)
-              </h3>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                Terdapat disparitas signifikan antara <span className="text-emerald-400 font-bold">{disparityAnalysis.highestVillage} ({disparityAnalysis.highestScore})</span> dengan <span className="text-rose-400 font-bold">{disparityAnalysis.lowestVillage} ({disparityAnalysis.lowestScore})</span>. Administrator Kabupaten disarankan mengalokasikan program afirmasi bantuan teknis ke wilayah yang tertinggal.
-              </p>
-            </div>
-
-            <div className="bg-white/10 backdrop-blur-md p-5 rounded-2xl border border-white/10 shrink-0 text-center space-y-1">
-              <span className="text-xs text-indigo-200 uppercase font-semibold">Indeks Kesenjangan</span>
-              <p className="text-3xl font-black text-white">{disparityAnalysis.gap} <span className="text-xs text-indigo-300">Poin</span></p>
-              <span className="text-[11px] text-amber-300 font-medium block">Perlu Intervensi Afirmatif</span>
-            </div>
+      {!isComparing ? (
+        <div className="bg-white p-12 rounded-3xl border border-slate-200/90 shadow-sm text-center flex flex-col items-center justify-center min-h-[300px]">
+          <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-4">
+            <Layers className="w-8 h-8" />
           </div>
+          <h3 className="text-xl font-bold text-slate-800 mb-2">
+            {selectedVillages.length === 0 ? "Belum ada desa yang dipilih" : "Siap untuk dibandingkan"}
+          </h3>
+          <p className="text-slate-500 max-w-md text-sm">
+            {selectedVillages.length === 0 
+              ? "Silakan tambah desa dari menu di atas." 
+              : "Klik tombol Bandingkan Desa untuk melihat hasil."}
+          </p>
+        </div>
+      ) : (
+        <>
+      {/* AI Disparity Analysis Button & Result */}
+      {disparityAnalysis && (
+        <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm">
+          {!showAI ? (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-800">Analisis Disparitas AI</h3>
+                  <p className="text-xs text-slate-500">Temukan kesenjangan terbesar secara otomatis.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAI(true)}
+                className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold rounded-xl transition-all shadow-sm"
+              >
+                Lihat Hasil AI
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="space-y-3 max-w-2xl">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs font-bold border border-indigo-100">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Analisis Disparitas AI</span>
+                </div>
+                <h3 className="text-xl font-black text-slate-900">
+                  Ketimpangan di {disparityAnalysis.category}
+                </h3>
+                <p className="text-slate-600 text-sm leading-relaxed">
+                  Kesenjangan terbesar terjadi antara <span className="text-emerald-600 font-bold">{disparityAnalysis.highestVillage} ({disparityAnalysis.highestScore})</span> dan <span className="text-rose-600 font-bold">{disparityAnalysis.lowestVillage} ({disparityAnalysis.lowestScore})</span>. Disarankan program difokuskan pada desa yang tertinggal.
+                </p>
+              </div>
+              <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 shrink-0 text-center space-y-1 min-w-[140px]">
+                <span className="text-xs text-slate-500 font-semibold">Selisih Poin</span>
+                <p className="text-3xl font-black text-indigo-600">{disparityAnalysis.gap}</p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -298,11 +314,8 @@ export default function ComparisonPage() {
           <div>
             <h3 className="font-extrabold text-slate-900 text-lg flex items-center gap-2">
               <Layers className="w-5 h-5 text-blue-600" />
-              <span>Pemetaan Radar 8 Pilar Ketahanan</span>
+              <span>Radar Ketahanan</span>
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Bentuk jaring poligon menggambarkan kekuatan dan kelemahan relatif setiap desa.
-            </p>
           </div>
         </div>
 
@@ -355,9 +368,8 @@ export default function ComparisonPage() {
       <div className="bg-white rounded-3xl border border-slate-200/90 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
           <h3 className="font-extrabold text-slate-900 text-lg">
-            Matriks Komparasi Rinci
+            Matriks Perbandingan
           </h3>
-          <span className="text-xs text-slate-400 font-medium">Skor dalam skala 0 - 100</span>
         </div>
 
         <div className="overflow-x-auto">
@@ -423,7 +435,7 @@ export default function ComparisonPage() {
               </tr>
 
               {/* 8 Categories Breakdown */}
-              {CATEGORIES.map((cat, catIdx) => {
+              {showDetailedMatrix && CATEGORIES.map((cat, catIdx) => {
                 const scores = selectedVillages.map((v) => v.scores[catIdx] || 0);
                 const maxScore = Math.max(...scores);
                 const minScore = Math.min(...scores);
@@ -472,8 +484,21 @@ export default function ComparisonPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Toggle Details Button */}
+        <div className="p-4 border-t border-slate-100 flex justify-center bg-slate-50/50">
+          <button
+            onClick={() => setShowDetailedMatrix(!showDetailedMatrix)}
+            className="px-5 py-2 bg-white border border-slate-200 hover:border-blue-400 text-sm font-bold text-slate-700 rounded-xl transition-all shadow-sm"
+          >
+            {showDetailedMatrix ? "Sembunyikan Skor per Pilar" : "Lihat Skor per Pilar"}
+          </button>
+        </div>
       </div>
+        </>
+      )}
 
     </div>
   );
 }
+
