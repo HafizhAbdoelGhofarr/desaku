@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { 
@@ -123,7 +123,7 @@ export default function DpmdDashboard() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-2 border border-emerald-200">
               <Globe2 className="w-3.5 h-3.5" />
               <span>
-                Wilayah Kerja: {selectedKabupaten !== "all" ? selectedKabupaten : selectedProvince !== "all" ? selectedProvince : "Seluruh Indonesia"}
+                Wilayah Kerja: {selectedKabupaten !== 'all' ? selectedKabupaten : 'Semua Kabupaten / Kota'}
               </span>
             </div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Dashboard Administrator Daerah</h1>
@@ -131,24 +131,10 @@ export default function DpmdDashboard() {
           </div>
         </div>
 
-        {/* Filter Wilayah Nasional (Provinsi -> Kabupaten -> Kecamatan) */}
-        <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-4">
           
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-              PROVINSI
-            </label>
-            <select
-              value={selectedProvince}
-              onChange={(e) => handleProvinceChange(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
-            >
-              <option value="all">Semua Provinsi ({provinces.length})</option>
-              {provinces.map((prov) => (
-                <option key={prov} value={prov}>{prov}</option>
-              ))}
-            </select>
-          </div>
+          
+          
 
           <div>
             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
