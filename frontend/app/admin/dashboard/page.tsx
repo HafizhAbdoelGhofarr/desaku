@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import Link from "next/link";
+
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { 
   getStatus, 
@@ -12,10 +12,6 @@ import { api } from "@/lib/api";
 import { 
   MapPin, 
   TrendingUp, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Filter, 
-  Building2, 
   Map, 
   BarChart3,
   Globe2
@@ -41,47 +37,26 @@ export default function DpmdDashboard() {
     fetchVillages();
   }, []);
 
-  const provinces = useMemo(() => Array.from(new Set(villages.map(v => v.provinsi))), [villages]);
-  const [selectedProvince, setSelectedProvince] = useState<string>("all");
-  
-  const availableKabupatens = useMemo(() => {
-    const list = selectedProvince === "all" ? villages : villages.filter(v => v.provinsi === selectedProvince);
-    return Array.from(new Set(list.map(v => v.kabupaten)));
-  }, [selectedProvince, villages]);
-  const [selectedKabupaten, setSelectedKabupaten] = useState<string>("all");
+  // Admin is tied to one kabupaten — derive name from loaded villages
+  const adminKabupaten = useMemo(() => {
+    if (villages.length === 0) return "Kabupaten";
+    return villages[0].kabupaten;
+  }, [villages]);
 
+  // Kecamatan filter only (no provinsi/kabupaten selectors for admin)
   const availableKecamatans = useMemo(() => {
-    let list = villages;
-    if (selectedProvince !== "all") list = list.filter(v => v.provinsi === selectedProvince);
-    if (selectedKabupaten !== "all") list = list.filter(v => v.kabupaten === selectedKabupaten);
-    return Array.from(new Set(list.map(v => v.kecamatan)));
-  }, [selectedProvince, selectedKabupaten, villages]);
+    return Array.from(new Set(villages.map(v => v.kecamatan)));
+  }, [villages]);
   const [selectedKecamatan, setSelectedKecamatan] = useState<string>("all");
 
   const [viewMode, setViewMode] = useState<"map" | "chart">("map");
 
-  // Handle Province change
-  const handleProvinceChange = (prov: string) => {
-    setSelectedProvince(prov);
-    setSelectedKabupaten("all");
-    setSelectedKecamatan("all");
-  };
-
-  // Handle Kabupaten change
-  const handleKabupatenChange = (kab: string) => {
-    setSelectedKabupaten(kab);
-    setSelectedKecamatan("all");
-  };
-
-  // Filtered villages
+  // Filtered villages — only by kecamatan
   const displayedVillages = useMemo(() => {
     return villages.filter((v) => {
-      const matchProv = selectedProvince === "all" || v.provinsi === selectedProvince;
-      const matchKab = selectedKabupaten === "all" || v.kabupaten === selectedKabupaten;
-      const matchKec = selectedKecamatan === "all" || v.kecamatan === selectedKecamatan;
-      return matchProv && matchKab && matchKec;
+      return selectedKecamatan === "all" || v.kecamatan === selectedKecamatan;
     });
-  }, [selectedProvince, selectedKabupaten, selectedKecamatan, villages]);
+  }, [selectedKecamatan, villages]);
 
   // Aggregate metrics
   const averageScore = useMemo(() => {
@@ -89,8 +64,7 @@ export default function DpmdDashboard() {
     return Math.round(displayedVillages.reduce((acc, v) => acc + v.overallScore, 0) / displayedVillages.length);
   }, [displayedVillages]);
 
-  const pendingCount = displayedVillages.length * 2;
-  const criticalVillages = displayedVillages.filter((v) => getStatus(v.overallScore) === "merah");
+
 
   // Data for chart
   const chartData = useMemo(() => {
@@ -123,7 +97,7 @@ export default function DpmdDashboard() {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-2 border border-emerald-200">
               <Globe2 className="w-3.5 h-3.5" />
               <span>
-                Wilayah Kerja: {selectedKabupaten !== 'all' ? selectedKabupaten : 'Semua Kabupaten / Kota'}
+                Wilayah Kerja: {adminKabupaten}
               </span>
             </div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Dashboard Administrator Daerah</h1>
@@ -131,30 +105,11 @@ export default function DpmdDashboard() {
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 gap-4">
-          
-          
-          
-
-          <div>
+        {/* Kecamatan Filter Only */}
+        <div className="bg-white p-4 rounded-3xl border border-slate-200 shadow-sm">
+          <div className="max-w-xs">
             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-              KABUPATEN / KOTA
-            </label>
-            <select
-              value={selectedKabupaten}
-              onChange={(e) => handleKabupatenChange(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
-            >
-              <option value="all">Semua Kabupaten / Kota</option>
-              {availableKabupatens.map((kab) => (
-                <option key={kab} value={kab}>{kab}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-              KECAMATAN
+              FILTER KECAMATAN
             </label>
             <select
               value={selectedKecamatan}
@@ -167,45 +122,30 @@ export default function DpmdDashboard() {
               ))}
             </select>
           </div>
-
         </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <MetricCard 
           title="Rata-rata Ketahanan" 
           value={`${averageScore}/100`} 
-          subtitle={selectedKecamatan !== "all" ? `Kec. ${selectedKecamatan}` : selectedKabupaten !== "all" ? selectedKabupaten : "Wilayah Terpilih"} 
+          subtitle={selectedKecamatan !== "all" ? `Kec. ${selectedKecamatan}` : adminKabupaten} 
           icon={<TrendingUp className="w-6 h-6 text-emerald-600" />} 
           color="emerald" 
         />
         <MetricCard 
           title="Desa Terdata" 
           value={`${displayedVillages.length}`} 
-          subtitle={`Dari total ${villages.length} desa nasional`} 
+          subtitle={`Dari total ${villages.length} desa di ${adminKabupaten}`} 
           icon={<MapPin className="w-6 h-6 text-blue-600" />} 
           color="blue" 
         />
-        <MetricCard 
-          title="Menunggu Verifikasi" 
-          value={pendingCount.toString()} 
-          subtitle="Indikator butuh review" 
-          icon={<CheckCircle2 className="w-6 h-6 text-amber-600" />} 
-          color="amber" 
-        />
-        <MetricCard 
-          title="Desa Kritis" 
-          value={criticalVillages.length.toString()} 
-          subtitle="Skor di bawah 40" 
-          icon={<AlertTriangle className="w-6 h-6 text-rose-600" />} 
-          color="rose" 
-        />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+      <div>
         {/* Visual Map & Chart Section */}
-        <div className="xl:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
+        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h2 className="text-xl font-bold text-slate-900">
@@ -283,49 +223,6 @@ export default function DpmdDashboard() {
             </div>
           )}
         </div>
-
-        {/* Quick Action / Alerts */}
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-between">
-          <div>
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Peringatan Desa Kritis</h2>
-            <p className="text-xs text-slate-400 mb-6">
-              Desa dengan skor &lt;40 memerlukan intervensi kebijakan darurat dan rekomendasi APBDes prioritas.
-            </p>
-
-            <div className="space-y-4">
-              {criticalVillages.length > 0 ? (
-                criticalVillages.map((v) => (
-                  <div key={v.id} className="p-4 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-between">
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-sm">{v.name}</h4>
-                      <p className="text-xs text-rose-700 font-medium">Kec. {v.kecamatan} ({v.kabupaten})</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-xl font-black text-rose-600">{v.overallScore}</span>
-                      <span className="text-xs text-rose-400 block font-bold">SKOR</span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-100 text-center">
-                  <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto mb-2" />
-                  <p className="text-xs font-bold text-emerald-900">Tidak Ada Desa Kritis</p>
-                  <p className="text-[11px] text-emerald-700 mt-0.5">Semua desa di wilayah terpilih berstatus aman.</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="pt-6 mt-6 border-t border-slate-100">
-            <Link
-              href="/admin/verification"
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white rounded-2xl py-3 text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md"
-            >
-              <span>Verifikasi Indikator</span>
-              <span className="px-2 py-0.5 bg-rose-500 rounded-full text-[10px]">{pendingCount}</span>
-            </Link>
-          </div>
-        </div>
       </div>
     </div>
   );
@@ -364,3 +261,4 @@ function MetricCard({
     </div>
   );
 }
+

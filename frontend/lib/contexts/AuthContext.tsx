@@ -8,7 +8,7 @@ import { api } from "../api";
 interface AuthContextValue {
   user: AuthUser | null;
   isLoading: boolean;
-  login: (role: Role, villageId?: string, villageName?: string, email?: string, password?: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -27,35 +27,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = useCallback(async (role: Role, villageId?: string, villageName?: string, email?: string, password?: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     setLoading(true);
     try {
-      // Try live FastAPI login if credentials match
-      const username = role === "admin" || role === "dpmd" ? "admin" : "operator_sukamaju";
-      const pwd = password || (role === "admin" ? "admin123" : "desa123");
+      // Derive username from email for FastAPI OAuth2 form login
+      const username = email.split("@")[0];
       
-      const res = await api.auth.login(username, pwd).catch(() => null);
+      const res = await api.auth.login(username, password).catch(() => null);
       if (res && res.access_token) {
-        const u: AuthUser = {
-          id: role === "admin" ? "u1" : "u2",
-          name: role === "admin" ? "Budi Santoso (Admin DPMD)" : `Operator ${villageName || "Desa Sukamaju"}`,
-          email: email || (role === "admin" ? "admin@dpmd.go.id" : "operator@desa.id"),
-          role,
-          village: villageName || (role === "desa" ? "Desa Sukamaju" : undefined),
-          villageId: villageId || (role === "desa" ? "v1" : undefined),
-        };
-        setSession(res.access_token, u);
-        setUser(u);
-        setLoading(false);
-        router.push(getRoleDashboard(role));
-        return;
+        // Store token temporarily to allow getMe to authenticate
+        if (typeof window !== "undefined") {
+          localStorage.setItem("sdk_auth_token", res.access_token);
+        }
+
+        // Fetch user profile from backend to determine role & village
+        try {
+          const me = await api.auth.getMe();
+          // Map backend role to frontend Role type
+          const role: Role = me.role === "pengelola_desa" ? "desa" : "admin";
+          
+          const u: AuthUser = {
+            id: String(me.id),
+            name: me.username,
+            email: me.email,
+            role,
+            villageId: me.village_id ? String(me.village_id) : undefined,
+          };
+          setSession(res.access_token, u);
+          setUser(u);
+          setLoading(false);
+          router.push(getRoleDashboard(role));
+          return;
+        } catch {
+          // If getMe fails, fall through to mock
+        }
       }
     } catch {
       // Silent fallback
     }
 
-    // Fallback to local session
-    const { token, user: u } = await mockLogin(role, villageId, villageName, email);
+    // Fallback to local mock session — derive role from email pattern
+    const role: Role = email.includes("operator") || email.includes("desa") ? "desa" : "admin";
+    const { token, user: u } = await mockLogin(role, undefined, undefined, email);
     setSession(token, u);
     setUser(u);
     setLoading(false);
@@ -80,3 +93,4 @@ export function useAuth() {
   if (!ctx) throw new Error("useAuth must be inside AuthProvider");
   return ctx;
 }
+

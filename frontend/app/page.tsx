@@ -17,7 +17,7 @@ export default function LandingPage() {
             href="/login"
             className="text-sm font-semibold bg-slate-900 text-white px-5 py-2.5 rounded-full hover:bg-slate-800 transition-all shadow-md hover:shadow-lg"
           >
-            Masuk Sistem (Petugas)
+            Login
           </Link>
         </nav>
       </header>
@@ -52,7 +52,7 @@ export default function LandingPage() {
             href="/login"
             className="flex items-center gap-2 bg-white text-slate-700 border border-slate-200 px-8 py-4 rounded-full text-lg font-medium hover:bg-slate-50 transition-all shadow-sm"
           >
-            Masuk Sistem Petugas
+            Login
           </Link>
         </div>
 
@@ -77,7 +77,7 @@ export default function LandingPage() {
       </main>
 
       <footer className="border-t border-slate-100 py-8 text-center text-slate-500 text-sm">
-        <p>&copy; {new Date().getFullYear()} Sistem Desa Ku - Gemastik XIX. All rights reserved.</p>
+        <p>&copy; {new Date().getFullYear()} Sistem Desa Ku - Desaku. All rights reserved.</p>
       </footer>
     </div>
   );

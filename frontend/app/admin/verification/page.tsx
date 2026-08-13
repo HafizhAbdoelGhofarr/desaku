@@ -13,8 +13,7 @@ import {
   X, 
   Check, 
   AlertTriangle, 
-  Send,
-  RefreshCw
+  Send
 } from "lucide-react";
 
 interface VerificationItem {
@@ -174,7 +173,7 @@ export default function VerificationPage() {
     const updatedItem = {
       ...item,
       status: "verified" as const,
-      reviewNote: "Data telah diverifikasi dan sesuai dengan dokumen pembuktian lapangan.",
+      reviewNote: "Diverifikasi.",
     };
     setData((prev) => prev.filter((i) => i.id !== item.id));
     setHistory((prev) => [updatedItem, ...prev]);
@@ -184,19 +183,19 @@ export default function VerificationPage() {
       const targetId = item.backendId || parseInt(item.id.replace(/\D/g, ""), 10) || 1;
       await api.indicators.verifyValue(targetId, {
         status: "verified",
-        catatan: "Disetujui oleh Administrator DPMD (Sesuai berkas lapangan)",
+        catatan: "Disetujui",
       });
     } catch (err) {
       console.warn("Backend verify sync failed", err);
     }
 
-    setVerifySuccessMsg(`Indikator "${item.field}" dari ${item.village} berhasil diverifikasi & disimpan permanen ke database!`);
+    setVerifySuccessMsg(`"${item.field}" dari ${item.village} berhasil diverifikasi.`);
     setTimeout(() => setVerifySuccessMsg(null), 3500);
   };
 
   const handleOpenRejectModal = (item: VerificationItem) => {
     setRejectModalItem(item);
-    setRejectReason("Mohon lengkapi dokumen pembuktian lapangan atau sesuaikan angka dengan SK resmi desa.");
+    setRejectReason("");
   };
 
   const handleConfirmReject = async (e: React.FormEvent) => {
@@ -225,7 +224,7 @@ export default function VerificationPage() {
 
     setRejectModalItem(null);
     setRejectReason("");
-    setVerifySuccessMsg(`Pengajuan "${rejectModalItem.field}" dikembalikan untuk revisi & disimpan ke database.`);
+    setVerifySuccessMsg(`"${rejectModalItem.field}" dikembalikan untuk revisi.`);
     setTimeout(() => setVerifySuccessMsg(null), 3500);
   };
 
@@ -241,35 +240,12 @@ export default function VerificationPage() {
             </div>
             <div>
               <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                Verifikasi & Validasi Data Indikator
+                Verifikasi Data
               </h1>
-              <p className="text-slate-500 mt-0.5">
-                Tinjau pengajuan indikator terbaru dari pengelola desa sebelum diterbitkan ke publik.
+              <p className="text-slate-500 mt-0.5 text-sm">
+                Tinjau pengajuan indikator dari pengelola desa.
               </p>
             </div>
-          </div>
-        </div>
-
-        {/* Stats summary & Refresh */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={fetchAllSubmissions}
-            disabled={isLoading}
-            className="flex items-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 rounded-2xl border border-slate-200 text-xs font-bold transition-all shadow-sm"
-            title="Refresh antrean verifikasi"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? "animate-spin text-emerald-600" : "text-slate-500"}`} />
-            <span>Refresh</span>
-          </button>
-          <div className="bg-amber-50 border border-amber-200 px-4 py-2 rounded-2xl text-center">
-            <span className="text-[11px] font-bold text-amber-800 uppercase block">Menunggu</span>
-            <span className="text-xl font-black text-amber-900">{data.length}</span>
-          </div>
-          <div className="bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-2xl text-center">
-            <span className="text-[11px] font-bold text-emerald-800 uppercase block">Disetujui</span>
-            <span className="text-xl font-black text-emerald-900">
-              {history.filter((h) => h.status === "verified").length}
-            </span>
           </div>
         </div>
 
@@ -299,7 +275,7 @@ export default function VerificationPage() {
           }`}
         >
           <Clock className="w-4 h-4" />
-          <span>Antrean Verifikasi ({data.length})</span>
+          <span>Antrean ({data.length})</span>
         </button>
 
         <button
@@ -311,7 +287,7 @@ export default function VerificationPage() {
           }`}
         >
           <FileText className="w-4 h-4" />
-          <span>Riwayat Verifikasi ({history.length})</span>
+          <span>Riwayat ({history.length})</span>
         </button>
       </div>
 
@@ -429,17 +405,17 @@ export default function VerificationPage() {
                           <button
                             onClick={() => handleOpenRejectModal(item)}
                             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-50 rounded-xl transition-colors border border-rose-200"
-                            title="Tolak atau Minta Revisi"
+                            title="Revisi"
                           >
                             <XCircle className="w-4 h-4" />
-                            <span>Minta Revisi</span>
+                            <span>Revisi</span>
                           </button>
                           <button
                             onClick={() => handleApprove(item)}
                             className="flex items-center gap-1.5 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition-all font-bold text-xs shadow-md shadow-emerald-200"
                           >
                             <CheckCircle2 className="w-4 h-4" />
-                            <span>Setujui</span>
+                            <span>Setuju</span>
                           </button>
                         </div>
                       </td>
@@ -492,7 +468,7 @@ export default function VerificationPage() {
                         )}
                       </td>
                       <td className="p-4 px-6 text-right text-xs text-slate-400 font-medium">
-                        Tervalidasi
+                        Selesai
                       </td>
                     </tr>
                   );
@@ -503,8 +479,8 @@ export default function VerificationPage() {
                 <tr>
                   <td colSpan={6} className="p-12 text-center text-slate-500 space-y-3">
                     <CheckCircle2 className="w-12 h-12 text-emerald-300 mx-auto" />
-                    <p className="text-base font-bold text-slate-800">Semua Data Telah Diverifikasi!</p>
-                    <p className="text-xs text-slate-400">Tidak ada pengajuan indikator yang menunggu persetujuan saat ini.</p>
+                    <p className="text-base font-bold text-slate-800">Semua Data Terverifikasi</p>
+                    <p className="text-xs text-slate-400">Tidak ada pengajuan yang menunggu.</p>
                   </td>
                 </tr>
               )}
@@ -514,8 +490,8 @@ export default function VerificationPage() {
                 <tr>
                   <td colSpan={7} className="p-12 text-center text-slate-500 space-y-3">
                     <FileText className="w-12 h-12 text-slate-300 mx-auto" />
-                    <p className="text-base font-bold text-slate-800">Belum Ada Riwayat Verifikasi Sesi Ini</p>
-                    <p className="text-xs text-slate-400">Aktivitas verifikasi atau revisi yang Anda lakukan akan tercatat di sini.</p>
+                    <p className="text-base font-bold text-slate-800">Belum Ada Riwayat</p>
+                    <p className="text-xs text-slate-400">Aktivitas verifikasi akan tercatat di sini.</p>
                   </td>
                 </tr>
               )}
@@ -532,11 +508,8 @@ export default function VerificationPage() {
               <div>
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="w-5 h-5 text-rose-300" />
-                  <h3 className="text-lg font-bold text-white">Minta Revisi / Tolak Pengajuan</h3>
+                  <h3 className="text-lg font-bold text-white">Minta Revisi</h3>
                 </div>
-                <p className="text-xs text-rose-100 mt-1">
-                  Kirim catatan kepada perangkat {rejectModalItem.village} agar data diperbaiki.
-                </p>
               </div>
 
               <button
@@ -558,7 +531,7 @@ export default function VerificationPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                  Catatan Administrator Kabupaten *
+                  Catatan Revisi *
                 </label>
                 <textarea
                   required
@@ -583,7 +556,7 @@ export default function VerificationPage() {
                   className="flex items-center gap-1.5 px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-xs shadow-md shadow-rose-200 transition-all"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>Kirim Catatan Revisi</span>
+                  <span>Kirim</span>
                 </button>
               </div>
             </form>
