@@ -33,7 +33,7 @@ import {
 
 export default function WhatIfPage() {
   const [selectedKecamatan, setSelectedKecamatan] = useState<string>("all");
-  const [selectedVillageId, setSelectedVillageId] = useState(VILLAGES[2].id); // Desa Tegalwaru (skor rendah 38)
+  const [selectedVillageId, setSelectedVillageId] = useState<string>("");
 
   const kecamatans = useMemo(() => {
     return Array.from(new Set(VILLAGES.map((v) => v.kecamatan)));
@@ -45,9 +45,7 @@ export default function WhatIfPage() {
   }, [selectedKecamatan]);
 
   const village = useMemo(() => {
-    const found = availableVillages.find((v) => v.id === selectedVillageId);
-    if (found) return found;
-    return availableVillages[0] || VILLAGES[0];
+    return availableVillages.find((v) => v.id === selectedVillageId) || null;
   }, [availableVillages, selectedVillageId]);
 
   // Form State - Direct User Input
@@ -55,55 +53,61 @@ export default function WhatIfPage() {
   const [budget, setBudget] = useState<number>(150_000_000);
   const [isSimulating, setIsSimulating] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [hasSimulated, setHasSimulated] = useState(false);
 
   // AI Causal Result
   const aiResult = useMemo(() => {
+    if (!village) return null;
     return simulatePolicyImpact(
       programTitle || "Program Bantuan Kabupaten",
       budget || 0,
       "Dusun Sasaran",
       village.scores
     );
-  }, [programTitle, budget, village.scores]);
+  }, [programTitle, budget, village]);
 
   const handleSelectVillage = (id: string) => {
     setSelectedVillageId(id);
     setSavedSuccess(false);
+    setHasSimulated(false);
   };
 
   const handleKecamatanChange = (kec: string) => {
     setSelectedKecamatan(kec);
-    const filtered = kec === "all" ? VILLAGES : VILLAGES.filter((v) => v.kecamatan === kec);
-    if (filtered.length > 0) {
-      setSelectedVillageId(filtered[0].id);
-    }
+    setSelectedVillageId("");
     setSavedSuccess(false);
+    setHasSimulated(false);
   };
 
   const handleSimulate = () => {
     setIsSimulating(true);
-    setTimeout(() => setIsSimulating(false), 300);
+    setTimeout(() => {
+      setIsSimulating(false);
+      setHasSimulated(true);
+    }, 300);
   };
 
   const handleReset = () => {
     setProgramTitle("Bantuan Keuangan Khusus Pembangunan Jalan Usaha Tani & Irigasi");
     setBudget(150_000_000);
     setSavedSuccess(false);
+    setHasSimulated(false);
   };
 
-  const currentStatus = getStatus(village.overallScore);
-  const simStatus = getStatus(aiResult.newOverallScore);
+  const currentStatus = village ? getStatus(village.overallScore) : "critical";
+  const simStatus = aiResult ? getStatus(aiResult.newOverallScore) : "critical";
   const currentColor = getStatusColor(currentStatus);
   const simColor = getStatusColor(simStatus);
 
   const chartData = useMemo(() => {
+    if (!village || !aiResult) return [];
     return CATEGORIES.map((cat, i) => ({
       name: cat.label.split(" ")[0],
       fullName: cat.label,
       "Baseline Saat Ini": village.scores[i],
       "Hasil Proyeksi": aiResult.simulatedScores[i],
     }));
-  }, [village, aiResult.simulatedScores]);
+  }, [village, aiResult]);
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto pb-12">
@@ -113,13 +117,13 @@ export default function WhatIfPage() {
         <div>
           <div className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg mb-1">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Simulator Kebijakan Kabupaten (DPMD)</span>
+            <span>Simulator</span>
           </div>
           <h1 className="text-xl md:text-2xl font-black text-slate-900">
-            What-If Policy Simulator
+            Simulasi Kebijakan
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Simulasi intervensi program & bantuan keuangan kabupaten ke desa sasaran.
+            Simulasikan dampak intervensi program.
           </p>
         </div>
 
@@ -141,49 +145,84 @@ export default function WhatIfPage() {
             </select>
           </div>
 
-          <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-2 rounded-xl border border-slate-200">
-            <Building2 className="w-3.5 h-3.5 text-blue-600" />
-            <select
-              value={village.id}
-              onChange={(e) => handleSelectVillage(e.target.value)}
-              className="bg-transparent text-xs font-bold text-slate-900 focus:outline-none cursor-pointer"
-            >
-              {availableVillages.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.name} (Skor {v.overallScore})
-                </option>
-              ))}
-            </select>
-          </div>
+          {village && (
+            <div className="flex items-center gap-1.5 bg-blue-50 px-3 py-2 rounded-xl border border-blue-200">
+              <Building2 className="w-3.5 h-3.5 text-blue-700" />
+              <span className="text-xs font-bold text-blue-900">{village.name}</span>
+              <button
+                onClick={() => handleSelectVillage("")}
+                className="ml-1 text-blue-400 hover:text-blue-700 transition-colors"
+                title="Ganti Desa"
+              >
+                <RotateCcw className="w-3 h-3" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
+      {!village ? (
+        <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+          <div className="text-center mb-6">
+            <div className="w-14 h-14 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Building2 className="w-7 h-7" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Pilih Desa Sasaran</h3>
+            <p className="text-slate-500 text-sm">
+              Pilih desa yang akan disimulasikan program bantuannya.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            {availableVillages.map((v) => (
+              <button
+                key={v.id}
+                onClick={() => handleSelectVillage(v.id)}
+                className="p-4 rounded-xl border border-slate-200 hover:border-blue-500 hover:bg-blue-50 transition-all text-left flex flex-col gap-1.5 group"
+              >
+                <span className="font-bold text-slate-800 text-sm group-hover:text-blue-700 transition-colors">{v.name}</span>
+                <span className="text-[11px] text-slate-500">Kec. {v.kecamatan}</span>
+                <span className="text-[10px] font-bold mt-1 bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md self-start">
+                  Skor: {v.overallScore}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <>
       {/* 2. Input Langsung Program & Anggaran Intervensi */}
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
           <div className="md:col-span-8">
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Nama Program Intervensi Bantuan Kabupaten:
+              Nama Program:
             </label>
             <input
               type="text"
               value={programTitle}
-              onChange={(e) => setProgramTitle(e.target.value)}
-              placeholder="Ketik usulan bantuan (contoh: Bantuan Keuangan Khusus Pembangunan Jembatan Tani, Pengadaan PMT Stunting...)"
+              onChange={(e) => {
+                setProgramTitle(e.target.value);
+                setHasSimulated(false);
+              }}
+              placeholder="Contoh: Pembangunan Jalan Tani..."
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           <div className="md:col-span-4">
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Plafon Anggaran Bantuan (Rp):
+              Anggaran (Rp):
             </label>
             <div className="flex items-center gap-2">
               <input
                 type="number"
                 step="5000000"
                 value={budget}
-                onChange={(e) => setBudget(Number(e.target.value))}
+                onChange={(e) => {
+                  setBudget(Number(e.target.value));
+                  setHasSimulated(false);
+                }}
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
@@ -198,11 +237,23 @@ export default function WhatIfPage() {
         </div>
       </div>
 
+      {!hasSimulated ? (
+        <div className="bg-white p-12 rounded-2xl border border-slate-200 shadow-sm text-center flex flex-col items-center justify-center min-h-[300px]">
+          <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center mb-4">
+            <Sparkles className="w-8 h-8" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-800 mb-2">Belum Ada Hasil Simulasi</h3>
+          <p className="text-slate-500 max-w-md text-sm">
+            Silakan masukkan nama program dan anggaran di atas, lalu klik tombol <span className="font-bold text-slate-700">Simulasi</span> untuk melihat proyeksi dampaknya.
+          </p>
+        </div>
+      ) : (
+        <>
       {/* 3. Ringkasan Skor & Dampak */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-[11px] font-bold text-slate-400 uppercase">Skor Baseline Desa</span>
+            <span className="text-[11px] font-bold text-slate-400 uppercase">Skor Saat Ini</span>
             <div className="text-3xl font-black text-slate-900 mt-1">{village.overallScore}</div>
             <span
               className="inline-block mt-1 px-2 py-0.5 rounded-md text-[10px] font-bold border"
@@ -218,7 +269,7 @@ export default function WhatIfPage() {
 
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
-            <span className="text-[11px] font-bold text-slate-400 uppercase">Proyeksi AI</span>
+            <span className="text-[11px] font-bold text-slate-400 uppercase">Skor Proyeksi</span>
             <div className="text-3xl font-black text-slate-900 mt-1">{aiResult.newOverallScore}</div>
             <span
               className="inline-block mt-1 px-2 py-0.5 rounded-md text-[10px] font-bold border"
@@ -261,9 +312,8 @@ export default function WhatIfPage() {
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-blue-600" />
-              Rantai Dampak Kausalitas AI ({village.name})
+              Dampak Intervensi
             </h3>
-            <span className="text-[11px] text-slate-400 font-medium">Multi-Sektor</span>
           </div>
 
           {/* Pilar Utama */}
@@ -285,7 +335,7 @@ export default function WhatIfPage() {
           {/* Efek Domino */}
           <div className="space-y-2">
             <span className="text-[11px] font-bold text-slate-400 uppercase">
-              Efek Domino ke Pilar Terkait:
+              Efek Lanjutan:
             </span>
             <div className="space-y-2">
               {aiResult.rippleEffects.map((r) => (
@@ -304,7 +354,7 @@ export default function WhatIfPage() {
 
           {/* Narasi AI Singkat */}
           <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-600 leading-relaxed">
-            <span className="font-bold text-slate-800 block mb-1">💡 Analisis Kebijakan Daerah:</span>
+            <span className="font-bold text-slate-800 block mb-1">💡 Analisis AI:</span>
             {aiResult.causalSummary}
           </div>
         </div>
@@ -313,9 +363,9 @@ export default function WhatIfPage() {
         <div className="lg:col-span-6 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
           <div>
             <h3 className="font-extrabold text-slate-900 text-sm">
-              Perbandingan 8 Pilar: Baseline vs Hasil Intervensi
+              Perbandingan 8 Pilar
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">Sasaran: {village.name} (Kec. {village.kecamatan})</p>
+            <p className="text-xs text-slate-400 mt-0.5">Desa {village.name}</p>
           </div>
 
           <div className="h-[280px]">
@@ -336,8 +386,7 @@ export default function WhatIfPage() {
           </div>
 
           {/* Tombol Simpan */}
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-            <span className="text-slate-400">Arsipkan untuk bahan Musrenbang Kabupaten</span>
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-end text-xs">
             <button
               onClick={() => {
                 setSavedSuccess(true);
@@ -346,12 +395,16 @@ export default function WhatIfPage() {
               className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-all flex items-center gap-1.5"
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>{savedSuccess ? "Tersimpan!" : "Simpan Rekomendasi"}</span>
+              <span>{savedSuccess ? "Tersimpan!" : "Simpan"}</span>
             </button>
           </div>
         </div>
 
       </div>
+        </>
+      )}
+        </>
+      )}
 
     </div>
   );

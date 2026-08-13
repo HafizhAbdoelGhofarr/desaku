@@ -183,11 +183,8 @@ export default function AdminReportsPage() {
             Tingkat Kabupaten (KF-13)
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Manajemen Suara Warga & Aduan Data
+            Manajemen Suara Warga
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
-            Monitoring, verifikasi lapangan, dan tindak lanjut laporan ketidaksesuaian data SDGs Desa dari masyarakat.
-          </p>
         </div>
       </div>
 
@@ -195,9 +192,8 @@ export default function AdminReportsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-slate-400 uppercase">Menunggu Tindak Lanjut</p>
+            <p className="text-xs font-bold text-slate-400 uppercase">Menunggu</p>
             <p className="text-3xl font-black text-rose-600 mt-2">{pendingCount}</p>
-            <p className="text-xs text-slate-500 mt-1">Laporan baru dari warga</p>
           </div>
           <div className="p-4 bg-rose-50 rounded-2xl border border-rose-100 text-rose-600">
             <AlertCircle className="w-6 h-6" />
@@ -206,9 +202,8 @@ export default function AdminReportsPage() {
 
         <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-slate-400 uppercase">Sedang Ditinjau Lapangan</p>
+            <p className="text-xs font-bold text-slate-400 uppercase">Ditinjau</p>
             <p className="text-3xl font-black text-amber-600 mt-2">{inReviewCount}</p>
-            <p className="text-xs text-slate-500 mt-1">Proses klarifikasi desa</p>
           </div>
           <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 text-amber-600">
             <Clock className="w-6 h-6" />
@@ -217,9 +212,8 @@ export default function AdminReportsPage() {
 
         <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-slate-400 uppercase">Selesai Ditindaklanjuti</p>
+            <p className="text-xs font-bold text-slate-400 uppercase">Selesai</p>
             <p className="text-3xl font-black text-emerald-600 mt-2">{resolvedCount}</p>
-            <p className="text-xs text-slate-500 mt-1">Data & solusi diselaraskan</p>
           </div>
           <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-emerald-600">
             <CheckCircle2 className="w-6 h-6" />
@@ -311,10 +305,10 @@ export default function AdminReportsPage() {
                     }`}
                   >
                     {item.status === "ditindaklanjuti"
-                      ? "Selesai Ditindaklanjuti"
+                      ? "Selesai"
                       : item.status === "ditinjau"
-                      ? "Sedang Ditinjau"
-                      : "Menunggu Tindak Lanjut"}
+                      ? "Ditinjau"
+                      : "Menunggu"}
                   </span>
 
                   <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">
@@ -342,23 +336,12 @@ export default function AdminReportsPage() {
                   <span>Kecamatan {item.kecamatan}</span>
                 </div>
                 <h3 className="text-base font-extrabold text-slate-900">{item.title}</h3>
-                <p className="text-xs text-slate-600 mt-2 leading-relaxed bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
-                  &ldquo;{item.description}&rdquo;
+                <p className="text-xs text-slate-600 mt-2 leading-relaxed bg-slate-50 p-3.5 rounded-2xl border border-slate-100 line-clamp-1">
+                  {item.description}
                 </p>
               </div>
 
-              {/* Official response if present */}
-              {item.adminResponse && (
-                <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-100 space-y-1">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-900">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                    <span>Catatan Tindak Lanjut Administrator:</span>
-                  </div>
-                  <p className="text-xs text-emerald-800 leading-relaxed pl-5.5">
-                    {item.adminResponse}
-                  </p>
-                </div>
-              )}
+
 
               <div className="flex items-center justify-end pt-2">
                 <button
@@ -366,7 +349,7 @@ export default function AdminReportsPage() {
                   className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  {item.adminResponse ? "Perbarui Tanggapan & Status" : "Beri Tanggapan & Tindak Lanjut"}
+                  {item.adminResponse ? "Perbarui" : "Tanggapi"}
                 </button>
               </div>
             </div>
@@ -376,10 +359,7 @@ export default function AdminReportsPage() {
         {filteredReports.length === 0 && (
           <div className="bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-3">
             <MessageCircle className="w-12 h-12 text-slate-300 mx-auto" />
-            <h4 className="font-bold text-slate-800 text-base">Tidak Ada Laporan Ditemukan</h4>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              Tidak ada aduan warga yang cocok dengan filter atau kata kunci pencarian Anda.
-            </p>
+            <h4 className="font-bold text-slate-800 text-base">Tidak Ada Laporan</h4>
           </div>
         )}
       </div>
@@ -391,11 +371,14 @@ export default function AdminReportsPage() {
             <div className="p-6 bg-slate-900 text-white flex items-center justify-between">
               <div>
                 <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider">
-                  Tindak Lanjut Laporan Warga
+                  Tanggapi Laporan
                 </span>
                 <h3 className="font-extrabold text-lg text-white mt-0.5">{activeReport.title}</h3>
                 <p className="text-xs text-slate-300">
                   {activeReport.villageName} &bull; Kec. {activeReport.kecamatan}
+                </p>
+                <p className="text-xs text-slate-400 mt-3 bg-white/5 p-3 rounded-xl border border-white/10 leading-relaxed max-h-32 overflow-y-auto">
+                  {activeReport.description}
                 </p>
               </div>
               <button
@@ -409,28 +392,28 @@ export default function AdminReportsPage() {
             <form onSubmit={handleSaveResponse} className="p-6 space-y-5">
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-2">
-                  Update Status Penanganan:
+                  Update Status:
                 </label>
                 <select
                   value={targetStatus}
                   onChange={(e) => setTargetStatus(e.target.value as CitizenReport["status"])}
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 >
-                  <option value="terkirim">Menunggu Tindak Lanjut</option>
-                  <option value="ditinjau">Sedang Ditinjau Lapangan</option>
-                  <option value="ditindaklanjuti">Selesai Ditindaklanjuti & Diselaraskan</option>
+                  <option value="terkirim">Menunggu</option>
+                  <option value="ditinjau">Ditinjau</option>
+                  <option value="ditindaklanjuti">Selesai</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 uppercase mb-2">
-                  Catatan Tindak Lanjut Resmi (Publik):
+                  Catatan:
                 </label>
                 <textarea
                   rows={4}
                   value={responseText}
                   onChange={(e) => setResponseText(e.target.value)}
-                  placeholder="Tuliskan keterangan verifikasi lapangan atau instruksi koreksi data kepada perangkat desa..."
+                  placeholder="Tuliskan catatan..."
                   className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium leading-relaxed"
                   required
                 />
@@ -448,7 +431,7 @@ export default function AdminReportsPage() {
                   type="submit"
                   className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-200 transition-all"
                 >
-                  Simpan & Publikasikan Tanggapan
+                  Simpan
                 </button>
               </div>
             </form>
