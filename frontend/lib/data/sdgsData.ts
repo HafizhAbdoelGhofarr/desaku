@@ -1,13 +1,13 @@
 // icon = lucide-react icon name; color is neutral — score colors handle status
 export const CATEGORIES = [
-  { id: 1, label: "Kesehatan",                    title: "Layanan kesehatan, gizi & sanitasi dasar",           color: "#475569", icon: "Heart" },
-  { id: 2, label: "Pendidikan",                   title: "Akses & kualitas pendidikan semua jenjang",          color: "#475569", icon: "GraduationCap" },
-  { id: 3, label: "Ekonomi",                      title: "Pengurangan kemiskinan & penghidupan layak",         color: "#475569", icon: "TrendingUp" },
-  { id: 4, label: "Infrastruktur & Aksesibilitas",title: "Air bersih, listrik, jalan & sanitasi layak",       color: "#475569", icon: "Wrench" },
-  { id: 5, label: "Ketahanan Bencana",             title: "Kesiapsiagaan, mitigasi & pemulihan bencana",       color: "#475569", icon: "ShieldAlert" },
-  { id: 6, label: "Lingkungan",                   title: "Ekosistem, tutupan hijau & pengelolaan limbah",      color: "#475569", icon: "Leaf" },
-  { id: 7, label: "Sosial",                       title: "Kesetaraan, kerukunan & partisipasi masyarakat",    color: "#475569", icon: "Users" },
-  { id: 8, label: "Tata Kelola",                  title: "Kapasitas pemerintahan desa & layanan publik",       color: "#475569", icon: "Landmark" },
+  { id: 1, label: "Kesehatan", weight: 0.20, title: "Layanan kesehatan, gizi & sanitasi dasar", color: "#475569", icon: "Heart" },
+  { id: 2, label: "Pendidikan", weight: 0.15, title: "Akses & kualitas pendidikan semua jenjang", color: "#475569", icon: "GraduationCap" },
+  { id: 3, label: "Ekonomi", weight: 0.20, title: "Pengurangan kemiskinan & penghidupan layak", color: "#475569", icon: "TrendingUp" },
+  { id: 4, label: "Infrastruktur dan Aksesibilitas", weight: 0.15, title: "Air bersih, listrik, jalan & sanitasi layak", color: "#475569", icon: "Wrench" },
+  { id: 5, label: "Ketahanan Bencana", weight: 0.10, title: "Kesiapsiagaan, mitigasi & pemulihan bencana", color: "#475569", icon: "ShieldAlert" },
+  { id: 6, label: "Lingkungan", weight: 0.08, title: "Ekosistem, tutupan hijau & pengelolaan limbah", color: "#475569", icon: "Leaf" },
+  { id: 7, label: "Sosial", weight: 0.05, title: "Kesetaraan, kerukunan & partisipasi masyarakat", color: "#475569", icon: "Users" },
+  { id: 8, label: "Tata Kelola Pemerintahan", weight: 0.07, title: "Kapasitas pemerintahan desa & layanan publik", color: "#475569", icon: "Landmark" },
 ];
 
 export type ScoreStatus = "merah" | "kuning" | "hijau";
@@ -318,72 +318,62 @@ export interface Indicator {
   description: string;
   minVal: number;
   maxVal: number;
+  weight: number;
+  globalWeight: number;
 }
 
 export const INDICATORS: Indicator[] = [
-  // 1. Kesehatan
-  { id: "k1", catId: 1, label: "Angka Stunting",               unit: "%",    description: "Persentase balita dengan tinggi badan di bawah standar",  minVal: 0,  maxVal: 100 },
-  { id: "k2", catId: 1, label: "Cakupan Imunisasi Dasar",      unit: "%",    description: "Persentase bayi yang mendapat imunisasi dasar lengkap",    minVal: 0,  maxVal: 100 },
-  { id: "k3", catId: 1, label: "Akses Sanitasi Layak",         unit: "%",    description: "Persentase rumah tangga dengan jamban sehat",              minVal: 0,  maxVal: 100 },
-  { id: "k4", catId: 1, label: "Akses Puskesmas/Pustu",        unit: "km",   description: "Jarak rata-rata warga ke fasilitas kesehatan terdekat",    minVal: 0,  maxVal: 50  },
-  { id: "k5", catId: 1, label: "Tenaga Kesehatan",             unit: "jiwa", description: "Jumlah tenaga kesehatan aktif di desa",                   minVal: 0,  maxVal: 50  },
-  { id: "k6", catId: 1, label: "Akses Air Bersih",             unit: "%",    description: "Persentase rumah tangga dengan sumber air bersih",         minVal: 0,  maxVal: 100 },
+  // 1. Kesehatan (catId: 1)
+  { id: "k1", catId: 1, label: "Akses layanan kesehatan",        unit: "%", description: "Persentase kemudahan akses", minVal: 0, maxVal: 100, weight: 0.25, globalWeight: 0.0500 },
+  { id: "k2", catId: 1, label: "Ketersediaan tenaga kesehatan",  unit: "%", description: "Kecukupan tenaga medis", minVal: 0, maxVal: 100, weight: 0.15, globalWeight: 0.0300 },
+  { id: "k3", catId: 1, label: "Persentase balita stunting",     unit: "%", description: "Tingkat balita stunting (dikonversi ke skor capaian positif)", minVal: 0, maxVal: 100, weight: 0.30, globalWeight: 0.0600 },
+  { id: "k4", catId: 1, label: "Cakupan imunisasi",              unit: "%", description: "Balita dengan imunisasi lengkap", minVal: 0, maxVal: 100, weight: 0.15, globalWeight: 0.0300 },
+  { id: "k5", catId: 1, label: "Akses sanitasi layak",           unit: "%", description: "Rumah tangga dengan sanitasi sehat", minVal: 0, maxVal: 100, weight: 0.15, globalWeight: 0.0300 },
 
-  // 2. Pendidikan
-  { id: "p1", catId: 2, label: "APK Sekolah Dasar",            unit: "%",    description: "Angka Partisipasi Kasar jenjang SD",                     minVal: 0,  maxVal: 100 },
-  { id: "p2", catId: 2, label: "APK Sekolah Menengah",         unit: "%",    description: "Angka Partisipasi Kasar jenjang SMP",                    minVal: 0,  maxVal: 100 },
-  { id: "p3", catId: 2, label: "Angka Putus Sekolah",          unit: "%",    description: "Persentase anak usia sekolah yang tidak bersekolah",       minVal: 0,  maxVal: 100 },
-  { id: "p4", catId: 2, label: "Rasio Guru–Murid",             unit: "rasio",description: "Perbandingan jumlah guru aktif terhadap murid",            minVal: 0,  maxVal: 50  },
-  { id: "p5", catId: 2, label: "Angka Buta Huruf",             unit: "%",    description: "Persentase penduduk dewasa tidak dapat membaca",           minVal: 0,  maxVal: 100 },
-  { id: "p6", catId: 2, label: "Fasilitas PAUD",               unit: "unit", description: "Jumlah lembaga PAUD aktif di desa",                       minVal: 0,  maxVal: 20  },
+  // 2. Pendidikan (catId: 2)
+  { id: "p1", catId: 2, label: "Angka partisipasi sekolah",      unit: "%", description: "Partisipasi anak usia sekolah", minVal: 0, maxVal: 100, weight: 0.25, globalWeight: 0.0375 },
+  { id: "p2", catId: 2, label: "Angka putus sekolah",            unit: "%", description: "Anak putus sekolah (dikonversi ke skor capaian positif)", minVal: 0, maxVal: 100, weight: 0.25, globalWeight: 0.0375 },
+  { id: "p3", catId: 2, label: "Ketersediaan tenaga pendidik",   unit: "%", description: "Kecukupan guru/dosen", minVal: 0, maxVal: 100, weight: 0.15, globalWeight: 0.0225 },
+  { id: "p4", catId: 2, label: "Rasio guru dan siswa",           unit: "%", description: "Keseimbangan guru dan murid", minVal: 0, maxVal: 100, weight: 0.15, globalWeight: 0.0225 },
+  { id: "p5", catId: 2, label: "Akses internet pendidikan",      unit: "%", description: "Internet untuk sekolah", minVal: 0, maxVal: 100, weight: 0.20, globalWeight: 0.0300 },
 
-  // 3. Ekonomi
-  { id: "e1", catId: 3, label: "Angka Kemiskinan",             unit: "%",    description: "Persentase penduduk di bawah garis kemiskinan",            minVal: 0,  maxVal: 100 },
-  { id: "e2", catId: 3, label: "Tingkat Pengangguran",         unit: "%",    description: "Persentase angkatan kerja yang tidak bekerja",             minVal: 0,  maxVal: 100 },
-  { id: "e3", catId: 3, label: "UMKM Aktif",                   unit: "unit", description: "Jumlah usaha mikro kecil menengah yang beroperasi",        minVal: 0,  maxVal: 500 },
-  { id: "e4", catId: 3, label: "BUMDes Aktif",                 unit: "unit", description: "Jumlah BUMDes yang beroperasi secara aktif",              minVal: 0,  maxVal: 10  },
-  { id: "e5", catId: 3, label: "Penerima PKH/Bansos",          unit: "jiwa", description: "Jumlah keluarga penerima manfaat program bantuan sosial",  minVal: 0,  maxVal: 2000},
-  { id: "e6", catId: 3, label: "Akses Kredit Usaha",           unit: "%",    description: "Persentase pelaku usaha yang dapat akses permodalan",      minVal: 0,  maxVal: 100 },
+  // 3. Ekonomi (catId: 3)
+  { id: "e1", catId: 3, label: "Tingkat kemiskinan",             unit: "%", description: "Tingkat penduduk miskin (dikonversi ke skor capaian positif)", minVal: 0, maxVal: 100, weight: 0.30, globalWeight: 0.0600 },
+  { id: "e2", catId: 3, label: "Tingkat pengangguran",           unit: "%", description: "Angka pengangguran (dikonversi ke skor capaian positif)", minVal: 0, maxVal: 100, weight: 0.20, globalWeight: 0.0400 },
+  { id: "e3", catId: 3, label: "Jumlah dan perkembangan UMKM",   unit: "%", description: "Pertumbuhan UMKM", minVal: 0, maxVal: 100, weight: 0.20, globalWeight: 0.0400 },
+  { id: "e4", catId: 3, label: "Pendapatan masyarakat",          unit: "%", description: "Peningkatan pendapatan rata-rata", minVal: 0, maxVal: 100, weight: 0.20, globalWeight: 0.0400 },
+  { id: "e5", catId: 3, label: "Ketersediaan lapangan pekerjaan",unit: "%", description: "Akses kerja lokal", minVal: 0, maxVal: 100, weight: 0.10, globalWeight: 0.0200 },
 
-  // 4. Infrastruktur & Aksesibilitas
-  { id: "i1", catId: 4, label: "Jalan Mantap",                 unit: "%",    description: "Persentase panjang jalan desa dalam kondisi baik",         minVal: 0,  maxVal: 100 },
-  { id: "i2", catId: 4, label: "Elektrifikasi Rumah",          unit: "%",    description: "Persentase rumah tangga dengan akses listrik",             minVal: 0,  maxVal: 100 },
-  { id: "i3", catId: 4, label: "Akses Air Minum",              unit: "%",    description: "Persentase RT yang terlayani PDAM/air pipa",               minVal: 0,  maxVal: 100 },
-  { id: "i4", catId: 4, label: "Cakupan Internet",             unit: "%",    description: "Persentase wilayah desa dengan sinyal 4G/internet",        minVal: 0,  maxVal: 100 },
-  { id: "i5", catId: 4, label: "Gedung Pelayanan Publik",      unit: "unit", description: "Jumlah gedung kantor/balai desa dalam kondisi baik",       minVal: 0,  maxVal: 10  },
-  { id: "i6", catId: 4, label: "Panjang Jalan Desa",           unit: "km",   description: "Total panjang jalan yang menjadi tanggung jawab desa",     minVal: 0,  maxVal: 100 },
+  // 4. Infrastruktur dan Aksesibilitas (catId: 4)
+  { id: "i1", catId: 4, label: "Kondisi jalan",                  unit: "%", description: "Jalan desa kondisi mantap", minVal: 0, maxVal: 100, weight: 0.25, globalWeight: 0.0375 },
+  { id: "i2", catId: 4, label: "Akses listrik",                  unit: "%", description: "Rumah tangga berlistrik", minVal: 0, maxVal: 100, weight: 0.20, globalWeight: 0.0300 },
+  { id: "i3", catId: 4, label: "Akses air bersih",               unit: "%", description: "Sumber air layak", minVal: 0, maxVal: 100, weight: 0.25, globalWeight: 0.0375 },
+  { id: "i4", catId: 4, label: "Akses internet",                 unit: "%", description: "Cakupan sinyal internet", minVal: 0, maxVal: 100, weight: 0.20, globalWeight: 0.0300 },
+  { id: "i5", catId: 4, label: "Kondisi fasilitas umum",         unit: "%", description: "Kelayakan fasum", minVal: 0, maxVal: 100, weight: 0.10, globalWeight: 0.0150 },
 
-  // 5. Ketahanan Bencana
-  { id: "b1", catId: 5, label: "Peta Risiko Bencana",          unit: "skor", description: "Ketersediaan peta risiko (0=tidak ada, 100=lengkap)",      minVal: 0,  maxVal: 100 },
-  { id: "b2", catId: 5, label: "Forum PRB Aktif",              unit: "unit", description: "Jumlah forum pengurangan risiko bencana aktif",            minVal: 0,  maxVal: 5   },
-  { id: "b3", catId: 5, label: "Simulasi/Latihan Bencana",     unit: "unit", description: "Frekuensi latihan evakuasi per tahun",                     minVal: 0,  maxVal: 12  },
-  { id: "b4", catId: 5, label: "Tempat Evakuasi",              unit: "unit", description: "Jumlah shelter/titik evakuasi yang layak",                 minVal: 0,  maxVal: 10  },
-  { id: "b5", catId: 5, label: "Sistem Peringatan Dini",       unit: "unit", description: "Jumlah alat/sistem peringatan dini yang berfungsi",        minVal: 0,  maxVal: 10  },
-  { id: "b6", catId: 5, label: "Dana Siaga Bencana",           unit: "unit", description: "Ketersediaan dana desa untuk tanggap darurat (0/1)",       minVal: 0,  maxVal: 1   },
+  // 5. Ketahanan Bencana (catId: 5)
+  { id: "b1", catId: 5, label: "Riwayat kejadian bencana",       unit: "%", description: "Frekuensi/dampak bencana (skor capaian positif)", minVal: 0, maxVal: 100, weight: 0.20, globalWeight: 0.0200 },
+  { id: "b2", catId: 5, label: "Ketersediaan jalur evakuasi",    unit: "%", description: "Jalur dan rambu evakuasi", minVal: 0, maxVal: 100, weight: 0.25, globalWeight: 0.0250 },
+  { id: "b3", catId: 5, label: "Fasilitas tanggap darurat",      unit: "%", description: "Kesiapan shelter/alat", minVal: 0, maxVal: 100, weight: 0.25, globalWeight: 0.0250 },
+  { id: "b4", catId: 5, label: "Sistem peringatan dini",         unit: "%", description: "Fungsi peringatan dini", minVal: 0, maxVal: 100, weight: 0.30, globalWeight: 0.0300 },
 
-  // 6. Lingkungan
-  { id: "l1", catId: 6, label: "Tutupan Lahan Hijau",          unit: "%",    description: "Persentase lahan desa bervegetasi/hutan",                  minVal: 0,  maxVal: 100 },
-  { id: "l2", catId: 6, label: "Pengelolaan Sampah",           unit: "%",    description: "Persentase RT yang memiliki akses pengelolaan sampah",     minVal: 0,  maxVal: 100 },
-  { id: "l3", catId: 6, label: "Kualitas Air Sungai",          unit: "skor", description: "Skor kualitas air badan air utama (0–100)",                minVal: 0,  maxVal: 100 },
-  { id: "l4", catId: 6, label: "Lahan Kritis",                 unit: "%",    description: "Persentase lahan yang mengalami degradasi",                minVal: 0,  maxVal: 100 },
-  { id: "l5", catId: 6, label: "Energi Terbarukan",            unit: "unit", description: "Jumlah instalasi energi terbarukan di desa",               minVal: 0,  maxVal: 50  },
-  { id: "l6", catId: 6, label: "Kelompok Peduli Lingkungan",   unit: "unit", description: "Jumlah kelompok/komunitas lingkungan aktif",               minVal: 0,  maxVal: 20  },
+  // 6. Lingkungan (catId: 6)
+  { id: "l1", catId: 6, label: "Pengelolaan sampah",             unit: "%", description: "Sistem daur ulang/TPS", minVal: 0, maxVal: 100, weight: 0.30, globalWeight: 0.0240 },
+  { id: "l2", catId: 6, label: "Kualitas air",                   unit: "%", description: "Bebas pencemaran", minVal: 0, maxVal: 100, weight: 0.30, globalWeight: 0.0240 },
+  { id: "l3", catId: 6, label: "Ruang terbuka hijau",            unit: "%", description: "Cakupan RTH desa", minVal: 0, maxVal: 100, weight: 0.15, globalWeight: 0.0120 },
+  { id: "l4", catId: 6, label: "Sanitasi lingkungan",            unit: "%", description: "Saluran pembuangan", minVal: 0, maxVal: 100, weight: 0.25, globalWeight: 0.0200 },
 
-  // 7. Sosial
-  { id: "s1", catId: 7, label: "Keaktifan Posyandu",           unit: "%",    description: "Persentase Posyandu yang aktif rutin setiap bulan",        minVal: 0,  maxVal: 100 },
-  { id: "s2", catId: 7, label: "Pernikahan Dini",              unit: "%",    description: "Persentase pernikahan di bawah usia 19 tahun",             minVal: 0,  maxVal: 100 },
-  { id: "s3", catId: 7, label: "Partisipasi Musyawarah Desa",  unit: "%",    description: "Tingkat kehadiran warga dalam MusDes",                    minVal: 0,  maxVal: 100 },
-  { id: "s4", catId: 7, label: "Kasus KDRT Dilaporkan",        unit: "unit", description: "Jumlah kasus KDRT yang resmi dilaporkan dalam 1 tahun",   minVal: 0,  maxVal: 100 },
-  { id: "s5", catId: 7, label: "Kepesertaan BPJS Kesehatan",   unit: "%",    description: "Persentase penduduk yang aktif sebagai peserta BPJS",      minVal: 0,  maxVal: 100 },
-  { id: "s6", catId: 7, label: "Kelompok Sosial Aktif",        unit: "unit", description: "Jumlah karang taruna, PKK, koperasi yang aktif",          minVal: 0,  maxVal: 30  },
+  // 7. Sosial (catId: 7)
+  { id: "s1", catId: 7, label: "Tingkat keamanan desa",          unit: "%", description: "Kondisi Kamtibmas", minVal: 0, maxVal: 100, weight: 0.30, globalWeight: 0.0150 },
+  { id: "s2", catId: 7, label: "Kegiatan sosial masyarakat",     unit: "%", description: "Partisipasi warga", minVal: 0, maxVal: 100, weight: 0.20, globalWeight: 0.0100 },
+  { id: "s3", catId: 7, label: "Gotong royong masyarakat",       unit: "%", description: "Frekuensi kerja bakti", minVal: 0, maxVal: 100, weight: 0.25, globalWeight: 0.0125 },
+  { id: "s4", catId: 7, label: "Konflik sosial",                 unit: "%", description: "Kerukunan (bebas konflik, skor positif)", minVal: 0, maxVal: 100, weight: 0.25, globalWeight: 0.0125 },
 
-  // 8. Tata Kelola
-  { id: "t1", catId: 8, label: "Skor ProDes Kabupaten",        unit: "skor", description: "Nilai profil desa dari sistem ProDeskel",                  minVal: 0,  maxVal: 100 },
-  { id: "t2", catId: 8, label: "Realisasi APBDes",             unit: "%",    description: "Persentase realisasi belanja APBDes tahun berjalan",        minVal: 0,  maxVal: 100 },
-  { id: "t3", catId: 8, label: "Laporan Keuangan Tepat Waktu", unit: "unit", description: "Jumlah laporan keuangan yang diserahkan tepat waktu",      minVal: 0,  maxVal: 4   },
-  { id: "t4", catId: 8, label: "Pengaduan Tertangani",         unit: "%",    description: "Persentase pengaduan warga yang ditindaklanjuti",          minVal: 0,  maxVal: 100 },
-  { id: "t5", catId: 8, label: "Website/Sistem Informasi Desa",unit: "unit", description: "Ketersediaan website/SID aktif (0=tidak ada, 1=ada)",     minVal: 0,  maxVal: 1   },
-  { id: "t6", catId: 8, label: "Aparatur Desa Terlatih",       unit: "jiwa", description: "Jumlah aparatur yang mengikuti pelatihan tahun ini",       minVal: 0,  maxVal: 50  },
+  // 8. Tata Kelola Pemerintahan (catId: 8)
+  { id: "t1", catId: 8, label: "Transparansi informasi desa",    unit: "%", description: "Keterbukaan informasi", minVal: 0, maxVal: 100, weight: 0.30, globalWeight: 0.0210 },
+  { id: "t2", catId: 8, label: "Ketersediaan data desa",         unit: "%", description: "Akurasi dan kelengkapan data", minVal: 0, maxVal: 100, weight: 0.25, globalWeight: 0.0175 },
+  { id: "t3", catId: 8, label: "Kualitas pelayanan publik",      unit: "%", description: "Indeks kepuasan warga", minVal: 0, maxVal: 100, weight: 0.25, globalWeight: 0.0175 },
+  { id: "t4", catId: 8, label: "Partisipasi masyarakat",         unit: "%", description: "Keterlibatan dalam musdes", minVal: 0, maxVal: 100, weight: 0.20, globalWeight: 0.0140 },
 ];
 
 export const PENDING_VERIFICATIONS = [

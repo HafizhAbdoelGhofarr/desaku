@@ -29,7 +29,8 @@ import {
   Wrench,
   ShieldAlert,
   Leaf,
-  Landmark
+  Landmark,
+  MapPin
 } from "lucide-react";
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -73,11 +74,8 @@ export default function DesaSummaryPage() {
             </div>
             <div>
               <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-                Ringkasan Ketahanan Desa
+                Ringkasan
               </h1>
-              <p className="text-slate-500 mt-0.5">
-                Monitoring capaian 8 pilar ketahanan, status data, dan panduan AI untuk {village.name}.
-              </p>
             </div>
           </div>
         </div>
@@ -92,79 +90,80 @@ export default function DesaSummaryPage() {
         </div>
       </div>
 
-      {/* Hero Card Overview */}
-      <div className="bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-950 rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
-        <div className="absolute right-0 top-0 translate-x-10 -translate-y-10 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+      {/* Overview Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        
+        {/* Kolom Kiri: Profil & Aksi (3 columns wide) */}
+        <div className="lg:col-span-3 bg-white rounded-3xl p-8 border border-slate-200 shadow-sm relative overflow-hidden flex flex-col justify-between">
+          <div className="absolute right-0 top-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl -z-10 translate-x-10 -translate-y-10"></div>
           
-          {/* Kolom 1: Profil Desa */}
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-700/60 backdrop-blur-sm rounded-full text-xs font-medium text-emerald-200 border border-emerald-600/40">
-              <span>Kecamatan {village.kecamatan}</span>
-              <span>•</span>
-              <span>Kabupaten Bogor</span>
+          <div className="z-10">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full text-xs font-bold text-slate-600 mb-4">
+              <MapPin className="w-3.5 h-3.5 text-slate-400" />
+              Kec. {village.kecamatan}, Kab. Bogor
             </div>
-            <h2 className="text-3xl font-black text-white">{village.name}</h2>
-            <div className="flex items-center gap-6 text-sm text-emerald-100/80 pt-1">
+            
+            <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-5">
+              {village.name}
+            </h2>
+            
+            <div className="flex flex-wrap items-center gap-6 text-sm font-bold text-slate-600 mb-8">
               <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-emerald-300" />
+                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                  <Users className="w-4 h-4" />
+                </div>
                 <span>{village.population.toLocaleString("id-ID")} Jiwa</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-300" />
+                <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
                 <span>{village.dataCompletion}% Data Terisi</span>
               </div>
             </div>
           </div>
 
-          {/* Kolom 2: Skor Ketahanan Utama */}
-          <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/15 flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-wider font-semibold text-emerald-200">
-                Skor Ketahanan Keseluruhan
-              </p>
-              <div className="flex items-baseline gap-2 mt-2">
-                <span className="text-4xl font-black text-white">{village.overallScore}</span>
-                <span className="text-emerald-300 text-sm font-semibold">/ 100</span>
-              </div>
-              <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold capitalize bg-white/20 text-white">
-                <span 
-                  className="w-2 h-2 rounded-full inline-block" 
-                  style={{ backgroundColor: statusColors.dot }}
-                />
-                Kategori {getStatusLabel(overallStatus)}
-              </div>
-            </div>
-            <div className="h-16 w-16 rounded-2xl bg-white/10 border border-white/20 flex flex-col items-center justify-center text-center">
-              <TrendingUp className="w-7 h-7 text-emerald-300" />
-            </div>
-          </div>
-
-          {/* Kolom 3: Aksi Cepat */}
-          <div className="flex flex-col sm:flex-row lg:flex-col gap-3">
+          <div className="flex flex-col sm:flex-row items-center gap-4 z-10">
             <Link
               href="/desa/input"
-              className="flex items-center justify-between px-5 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-2xl transition-all shadow-lg shadow-emerald-950/20 group"
+              className="flex items-center gap-2 px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl transition-all shadow-md w-full sm:w-auto justify-center"
             >
-              <div className="flex items-center gap-3">
-                <Edit3 className="w-5 h-5 text-slate-950" />
-                <span>Input / Update Indikator</span>
-              </div>
-              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <Edit3 className="w-4 h-4" />
+              Input
             </Link>
-
+            
             <Link
               href="/desa/rekomendasi"
-              className="flex items-center justify-between px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white font-medium rounded-2xl border border-white/20 transition-all group"
+              className="flex items-center gap-2 px-6 py-3.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold rounded-xl transition-all border border-emerald-200 w-full sm:w-auto justify-center"
             >
-              <div className="flex items-center gap-3">
-                <Sparkles className="w-5 h-5 text-amber-300" />
-                <span>Lihat Rekomendasi AI</span>
-              </div>
-              <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              <Sparkles className="w-4 h-4 text-emerald-600" />
+              Rekomendasi
             </Link>
           </div>
+        </div>
 
+        {/* Kolom Kanan: Skor Keseluruhan (1 column wide) */}
+        <div 
+          className="lg:col-span-1 rounded-3xl p-8 shadow-sm flex flex-col justify-center items-center text-center relative overflow-hidden border"
+          style={{ backgroundColor: statusColors.bg, borderColor: statusColors.border }}
+        >
+          <p className="text-xs font-black uppercase tracking-wider mb-4 opacity-80" style={{ color: statusColors.text }}>
+            Skor Keseluruhan
+          </p>
+          
+          <div className="mb-4">
+            <span className="text-7xl font-black tracking-tighter" style={{ color: statusColors.text }}>
+              {village.overallScore}
+            </span>
+          </div>
+
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-extrabold capitalize bg-white/60 shadow-sm" style={{ color: statusColors.text }}>
+            <span 
+              className="w-2.5 h-2.5 rounded-full inline-block shadow-sm" 
+              style={{ backgroundColor: statusColors.dot }}
+            />
+            {getStatusLabel(overallStatus)}
+          </div>
         </div>
       </div>
 
@@ -172,8 +171,7 @@ export default function DesaSummaryPage() {
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-xl font-bold text-slate-900">8 Pilar Ketahanan Desa</h3>
-            <p className="text-sm text-slate-500">Skor terverifikasi per aspek pembangunan berkelanjutan</p>
+            <h3 className="text-xl font-bold text-slate-900">8 Pilar Ketahanan</h3>
           </div>
           <span className="text-xs font-semibold px-3 py-1 bg-slate-100 text-slate-600 rounded-full">
             Periode 2026
@@ -208,7 +206,6 @@ export default function DesaSummaryPage() {
                   <h4 className="font-bold text-slate-800 group-hover:text-emerald-900 transition-colors">
                     {cat.label}
                   </h4>
-                  <p className="text-xs text-slate-400 mt-1 line-clamp-1">{cat.title}</p>
                 </div>
 
                 {/* Progress Bar */}
@@ -223,8 +220,7 @@ export default function DesaSummaryPage() {
                     />
                   </div>
                   <div className="flex justify-between items-center mt-2 text-[11px] text-slate-400">
-                    <span>Status: <strong style={{ color: col.text }}>{getStatusLabel(status)}</strong></span>
-                    <span>Target: 80+</span>
+                    <strong style={{ color: col.text }}>{getStatusLabel(status)}</strong>
                   </div>
                 </div>
               </div>
@@ -245,8 +241,7 @@ export default function DesaSummaryPage() {
                   <ClipboardCheck className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900">Status Verifikasi Pengajuan</h3>
-                  <p className="text-xs text-slate-500">Pelacakan data yang diajukan ke Administrator Kabupaten</p>
+                  <h3 className="font-bold text-slate-900">Status Verifikasi</h3>
                 </div>
               </div>
               <Link
@@ -267,13 +262,13 @@ export default function DesaSummaryPage() {
                   <div className="space-y-0.5">
                     <p className="font-semibold text-sm text-slate-800">{item.field}</p>
                     <p className="text-xs text-slate-400">
-                      Nilai: <span className="font-bold text-slate-700">{item.value}</span> • Oleh {item.submittedBy}
+                      <span className="font-bold text-slate-700">{item.value}</span>
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200">
                       <Clock className="w-3.5 h-3.5" />
-                      Menunggu Admin
+                      Menunggu
                     </span>
                   </div>
                 </div>
@@ -282,9 +277,7 @@ export default function DesaSummaryPage() {
           </div>
 
           <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-xs text-slate-500">
-              Data yang disetujui Administrator akan langsung mengupdate skor publik.
-            </span>
+
             <Link
               href="/desa/status"
               className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition-colors"
@@ -303,8 +296,7 @@ export default function DesaSummaryPage() {
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900">Rekomendasi Kebijakan AI</h3>
-                  <p className="text-xs text-slate-500">Panduan intervensi prioritas untuk {village.name}</p>
+                  <h3 className="font-bold text-slate-900">Rekomendasi AI</h3>
                 </div>
               </div>
               <span className="text-xs font-bold px-2.5 py-1 rounded-lg bg-rose-50 text-rose-700 border border-rose-100 uppercase">
@@ -313,21 +305,12 @@ export default function DesaSummaryPage() {
             </div>
 
             <div className="mt-4 space-y-3">
-              <div className="p-4 rounded-2xl bg-indigo-50/50 border border-indigo-100">
-                <h4 className="font-bold text-sm text-indigo-950 mb-1">
-                  {villageAi.title}
-                </h4>
-                <p className="text-xs text-slate-600 line-clamp-2">
-                  {villageAi.summary}
-                </p>
-              </div>
-
               <div className="p-4 rounded-2xl bg-amber-50/50 border border-amber-100">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-2">
                   <AlertTriangle className="w-4 h-4 text-amber-600" />
-                  <span className="text-xs font-bold text-amber-900 uppercase">Rencana Intervensi Disarankan</span>
+                  <span className="text-xs font-bold text-amber-900 uppercase line-clamp-1">{villageAi.title}</span>
                 </div>
-                <p className="text-xs text-amber-950 font-medium">
+                <p className="text-xs text-amber-950 font-medium line-clamp-1">
                   {villageAi.intervention}
                 </p>
               </div>
@@ -335,14 +318,12 @@ export default function DesaSummaryPage() {
           </div>
 
           <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-xs text-slate-500">
-              Analisis sebab-akibat antar indikator
-            </span>
+
             <Link
               href="/desa/rekomendasi"
               className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-colors shadow-sm shadow-indigo-200 flex items-center gap-1.5"
             >
-              Lihat Analisis Detail <ChevronRight className="w-3.5 h-3.5" />
+              Lihat Detail <ChevronRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>

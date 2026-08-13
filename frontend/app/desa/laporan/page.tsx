@@ -10,12 +10,14 @@ import {
 } from "@/lib/data/sdgsData";
 import { api } from "@/lib/api";
 import { 
+  Search,
   MessageCircle, 
   ShieldCheck, 
   CheckCircle2, 
   Clock, 
   AlertCircle, 
   ThumbsUp, 
+  MapPin,
   Calendar, 
   Send, 
   X,
@@ -32,7 +34,9 @@ export default function DesaLaporanPage() {
 
   const [reports, setReports] = useState<CitizenReport[]>(CITIZEN_REPORTS);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Response Modal
   const [activeReport, setActiveReport] = useState<CitizenReport | null>(null);
@@ -109,9 +113,20 @@ export default function DesaLaporanPage() {
   }, [reports, currentVillage]);
 
   const filteredReports = useMemo(() => {
-    if (selectedStatus === "all") return villageReports;
-    return villageReports.filter((r) => r.status === selectedStatus);
-  }, [villageReports, selectedStatus]);
+    return villageReports.filter((r) => {
+      const matchCat =
+        selectedCategory === "all" ||
+        r.catId?.toString() === selectedCategory ||
+        r.category === selectedCategory;
+      const matchStatus = selectedStatus === "all" || r.status === selectedStatus;
+      const q = searchQuery.toLowerCase().trim();
+      const matchSearch =
+        !q ||
+        (r.title && r.title.toLowerCase().includes(q)) ||
+        (r.description && r.description.toLowerCase().includes(q));
+      return matchCat && matchStatus && matchSearch;
+    });
+  }, [villageReports, selectedCategory, selectedStatus, searchQuery]);
 
   // Statistics
   const pendingCount = villageReports.filter((r) => r.status === "terkirim").length;
@@ -166,16 +181,13 @@ export default function DesaLaporanPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-2">
-            <MessageCircle className="w-3.5 h-3.5" />
-            Aspirasi & Suara Warga (KF-13)
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-200/80 text-slate-700 text-xs font-bold uppercase tracking-wider mb-2">
+            <Building2 className="w-3.5 h-3.5" />
+            Tingkat Desa
           </div>
           <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">
-            Inbox Suara Warga Desa
+            Suara Warga
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
-            Dengar langsung aspirasi dan laporan ketidaksesuaian data lapangan dari masyarakat {currentVillage.name}.
-          </p>
         </div>
 
         {/* Single-Village Locked Badge */}
@@ -197,9 +209,8 @@ export default function DesaLaporanPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-slate-400 uppercase">Menunggu Tanggapan</p>
+            <p className="text-xs font-bold text-slate-400 uppercase">Menunggu</p>
             <p className="text-3xl font-black text-rose-600 mt-2">{pendingCount}</p>
-            <p className="text-xs text-slate-500 mt-1">Aspirasi warga baru</p>
           </div>
           <div className="p-4 bg-rose-50 rounded-2xl border border-rose-100 text-rose-600">
             <AlertCircle className="w-6 h-6" />
@@ -208,9 +219,8 @@ export default function DesaLaporanPage() {
 
         <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-slate-400 uppercase">Sedang Ditindaklanjuti</p>
+            <p className="text-xs font-bold text-slate-400 uppercase">Ditinjau</p>
             <p className="text-3xl font-black text-amber-600 mt-2">{inReviewCount}</p>
-            <p className="text-xs text-slate-500 mt-1">Verifikasi & perbaikan fisik</p>
           </div>
           <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 text-amber-600">
             <Clock className="w-6 h-6" />
@@ -219,9 +229,8 @@ export default function DesaLaporanPage() {
 
         <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-slate-400 uppercase">Tuntas Diselesaikan</p>
+            <p className="text-xs font-bold text-slate-400 uppercase">Selesai</p>
             <p className="text-3xl font-black text-emerald-600 mt-2">{resolvedCount}</p>
-            <p className="text-xs text-slate-500 mt-1">Data selaras dengan warga</p>
           </div>
           <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-emerald-600">
             <CheckCircle2 className="w-6 h-6" />
@@ -229,52 +238,47 @@ export default function DesaLaporanPage() {
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
-        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-          Filter Status Aspirasi:
-        </span>
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setSelectedStatus("all")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              selectedStatus === "all"
-                ? "bg-emerald-900 text-white"
-                : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            Semua ({villageReports.length})
-          </button>
-          <button
-            onClick={() => setSelectedStatus("terkirim")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              selectedStatus === "terkirim"
-                ? "bg-emerald-900 text-white"
-                : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            Menunggu ({pendingCount})
-          </button>
-          <button
-            onClick={() => setSelectedStatus("ditinjau")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              selectedStatus === "ditinjau"
-                ? "bg-emerald-900 text-white"
-                : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            Ditinjau ({inReviewCount})
-          </button>
-          <button
-            onClick={() => setSelectedStatus("ditindaklanjuti")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              selectedStatus === "ditindaklanjuti"
-                ? "bg-emerald-900 text-white"
-                : "text-slate-600 hover:bg-slate-100"
-            }`}
-          >
-            Selesai ({resolvedCount})
-          </button>
+      {/* Filter and Search Bar */}
+      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          <div className="relative flex-1 w-full">
+            <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari kata kunci laporan..."
+              className="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+            {/* Filter Kategori Pilar */}
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
+            >
+              <option value="all">Semua Pilar</option>
+              {CATEGORIES.map((cat) => (
+                <option key={cat.id} value={cat.id.toString()}>
+                  {cat.label}
+                </option>
+              ))}
+            </select>
+
+            {/* Filter Status */}
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 focus:outline-none cursor-pointer"
+            >
+              <option value="all">Semua Status</option>
+              <option value="terkirim">Menunggu</option>
+              <option value="ditinjau">Ditinjau</option>
+              <option value="ditindaklanjuti">Selesai</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -302,14 +306,14 @@ export default function DesaLaporanPage() {
                     }`}
                   >
                     {item.status === "ditindaklanjuti"
-                      ? "Selesai Ditindaklanjuti"
+                      ? "Selesai"
                       : item.status === "ditinjau"
-                      ? "Sedang Ditinjau"
-                      : "Menunggu Tindak Lanjut"}
+                      ? "Ditinjau"
+                      : "Menunggu"}
                   </span>
 
                   <span className="px-2.5 py-1 rounded-full bg-slate-100 text-slate-700 text-xs font-bold">
-                    Pilar {categoryObj?.label || item.category || "Umum"}
+                    {categoryObj?.label || item.category}
                   </span>
                 </div>
 
@@ -320,15 +324,21 @@ export default function DesaLaporanPage() {
                   </span>
                   <span className="flex items-center gap-1 font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg">
                     <ThumbsUp className="w-3.5 h-3.5 text-emerald-600" />
-                    {item.upvotes} Dukungan Warga
+                    {item.upvotes} Dukungan
                   </span>
                 </div>
               </div>
 
               <div>
+                <div className="flex items-center gap-2 mb-1 text-xs font-semibold text-slate-500">
+                  <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>{item.villageName}</span>
+                  <span>&bull;</span>
+                  <span>Kecamatan {item.kecamatan}</span>
+                </div>
                 <h3 className="text-base font-extrabold text-slate-900">{item.title}</h3>
-                <p className="text-xs text-slate-600 mt-2 leading-relaxed bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
-                  &ldquo;{item.description}&rdquo;
+                <p className="text-xs text-slate-600 mt-2 leading-relaxed bg-slate-50 p-3.5 rounded-2xl border border-slate-100 line-clamp-1">
+                  {item.description}
                 </p>
               </div>
 
@@ -360,11 +370,8 @@ export default function DesaLaporanPage() {
 
         {filteredReports.length === 0 && (
           <div className="bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-3">
-            <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto" />
-            <h4 className="font-bold text-slate-800 text-base">Tidak Ada Aduan Menunggu</h4>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              Saat ini tidak ada laporan ketidaksesuaian data yang aktif untuk wilayah {currentVillage.name}.
-            </p>
+            <MessageCircle className="w-12 h-12 text-slate-300 mx-auto" />
+            <h4 className="font-bold text-slate-800 text-base">Tidak Ada Laporan</h4>
           </div>
         )}
       </div>

@@ -44,6 +44,7 @@ export default function DesaWhatIfPage() {
   const [budget, setBudget] = useState<number>(100_000_000);
   const [isSimulating, setIsSimulating] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [hasSimulated, setHasSimulated] = useState(false);
 
   // AI Causal Result
   const aiResult = useMemo(() => {
@@ -57,13 +58,17 @@ export default function DesaWhatIfPage() {
 
   const handleSimulate = () => {
     setIsSimulating(true);
-    setTimeout(() => setIsSimulating(false), 300);
+    setTimeout(() => {
+      setIsSimulating(false);
+      setHasSimulated(true);
+    }, 300);
   };
 
   const handleReset = () => {
     setProgramTitle("Pembangunan Jalan Usaha Tani dan Irigasi Sawah");
     setBudget(100_000_000);
     setSavedSuccess(false);
+    setHasSimulated(false);
   };
 
   // Status Colors
@@ -119,7 +124,10 @@ export default function DesaWhatIfPage() {
             <input
               type="text"
               value={programTitle}
-              onChange={(e) => setProgramTitle(e.target.value)}
+              onChange={(e) => {
+                setProgramTitle(e.target.value);
+                setHasSimulated(false);
+              }}
               placeholder="Ketik rencana program (contoh: Pengaspalan jalan dusun, revitalisasi posyandu, bantuan permodalan BUMDes...)"
               className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
             />
@@ -134,7 +142,10 @@ export default function DesaWhatIfPage() {
                 type="number"
                 step="5000000"
                 value={budget}
-                onChange={(e) => setBudget(Number(e.target.value))}
+                onChange={(e) => {
+                  setBudget(Number(e.target.value));
+                  setHasSimulated(false);
+                }}
                 className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold font-mono text-slate-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
               <button
@@ -149,7 +160,19 @@ export default function DesaWhatIfPage() {
         </div>
       </div>
 
-      {/* 3. Ringkasan Skor & Dampak Intervensi */}
+      {!hasSimulated ? (
+        <div className="bg-white p-12 rounded-2xl border border-slate-200 shadow-sm text-center flex flex-col items-center justify-center min-h-[300px]">
+          <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-4">
+            <Sparkles className="w-8 h-8" />
+          </div>
+          <h3 className="text-lg font-bold text-slate-800 mb-2">Belum Ada Hasil Simulasi</h3>
+          <p className="text-slate-500 max-w-md text-sm">
+            Silakan masukkan nama program dan estimasi anggaran di atas, lalu klik tombol <span className="font-bold text-slate-700">Simulasi</span> untuk melihat proyeksi dampaknya terhadap pilar desa.
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* 3. Ringkasan Skor & Dampak Intervensi */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         
         {/* Baseline */}
@@ -307,6 +330,8 @@ export default function DesaWhatIfPage() {
         </div>
 
       </div>
+        </>
+      )}
 
     </div>
   );

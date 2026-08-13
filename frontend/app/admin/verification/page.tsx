@@ -242,9 +242,6 @@ export default function VerificationPage() {
               <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
                 Verifikasi Data
               </h1>
-              <p className="text-slate-500 mt-0.5 text-sm">
-                Tinjau pengajuan indikator dari pengelola desa.
-              </p>
             </div>
           </div>
         </div>

@@ -273,11 +273,8 @@ export default function DesaStatusPage() {
           </div>
           <div>
             <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-              Status Verifikasi Indikator
+              Status Verifikasi
             </h1>
-            <p className="text-slate-500 mt-0.5">
-              Pantau status verifikasi dan catatan Administrator Kabupaten untuk setiap data indikator {village.name}.
-            </p>
           </div>
         </div>
 
@@ -393,13 +390,6 @@ export default function DesaStatusPage() {
         </div>
       </div>
 
-      {/* Info Box mekanisme verifikasi */}
-      <div className="p-4 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl flex items-start gap-3 text-sm text-emerald-900">
-        <Info className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
-        <div>
-          <span className="font-bold">Database Server PostgreSQL Aktif:</span> Setiap pengajuan, perubahan (edit), dan penghapusan data tersimpan permanen di database. Status verifikasi diperbarui secara berkala oleh Administrator Kabupaten.
-        </div>
-      </div>
 
       {/* Table Section */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
@@ -470,24 +460,18 @@ export default function DesaStatusPage() {
                   <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5 text-slate-400" />
-                      Diajukan: <strong>{item.submittedAt}</strong>
+                      <strong>{item.submittedAt}</strong>
                     </span>
                     <span>•</span>
-                    <span>Oleh: <strong className="text-slate-700">{item.submittedBy}</strong></span>
-                    {item.verifier && (
-                      <>
-                        <span>•</span>
-                        <span>Diverifikasi oleh: <strong className="text-slate-700">{item.verifier}</strong></span>
-                      </>
-                    )}
+                    <span><strong className="text-slate-700">{item.submittedBy}</strong></span>
                   </div>
 
                   {/* Catatan Verifikator / Catatan Internal */}
                   {item.notes && (
                     <div className="mt-2 text-xs p-3 rounded-xl bg-slate-50 border border-slate-100 text-slate-600 flex items-start gap-2">
                       <FileText className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
-                      <span>
-                        <strong className="text-slate-800">Catatan Review:</strong> {item.notes}
+                      <span className="line-clamp-1">
+                        {item.notes}
                       </span>
                     </div>
                   )}
@@ -554,10 +538,7 @@ export default function DesaStatusPage() {
               <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto text-slate-400 mb-3">
                 <Filter className="w-6 h-6" />
               </div>
-              <h4 className="font-bold text-slate-700">Tidak ada data pengajuan</h4>
-              <p className="text-sm text-slate-400 mt-1 max-w-sm mx-auto">
-                Tidak ditemukan data dengan filter status atau kata kunci yang dipilih.
-              </p>
+              <h4 className="font-bold text-slate-700">Data kosong</h4>
               <button
                 onClick={() => {
                   setStatusFilter("all");
