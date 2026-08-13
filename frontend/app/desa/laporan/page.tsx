@@ -21,7 +21,8 @@ import {
   Calendar, 
   Send, 
   X,
-  RefreshCw
+  RefreshCw,
+  Building2
 } from "lucide-react";
 
 export default function DesaLaporanPage() {
