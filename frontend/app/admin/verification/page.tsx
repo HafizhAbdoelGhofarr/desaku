@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { PENDING_VERIFICATIONS, CATEGORIES, VILLAGES } from "@/lib/data/sdgsData";
+import { CATEGORIES, VILLAGES } from "@/lib/data/sdgsData";
 import { api } from "@/lib/api";
 import { 
   Search, 
@@ -118,12 +118,11 @@ export default function VerificationPage() {
         setData(pendingList);
         setHistory(historyList);
       } else {
-        // Fallback default
-        setData(PENDING_VERIFICATIONS.map((item) => ({ ...item, status: "pending" as const })));
+        setData([]);
       }
     } catch (err) {
-      console.warn("Using local pending verifications fallback", err);
-      setData(PENDING_VERIFICATIONS.map((item) => ({ ...item, status: "pending" as const })));
+      console.warn("API request failed", err);
+      setData([]);
     } finally {
       setIsLoading(false);
     }

@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { 
-  VILLAGES, 
   CATEGORIES, 
   getStatus, 
   getStatusColor, 
   getStatusLabel 
 } from "@/lib/data/sdgsData";
+import { api } from "@/lib/api";
 import { 
   simulatePolicyImpact 
 } from "@/lib/data/causalEngine";
@@ -34,15 +34,37 @@ import {
 export default function WhatIfPage() {
   const [selectedKecamatan, setSelectedKecamatan] = useState<string>("all");
   const [selectedVillageId, setSelectedVillageId] = useState<string>("");
+  const [villagesData, setVillagesData] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const kecamatans = useMemo(() => {
-    return Array.from(new Set(VILLAGES.map((v) => v.kecamatan)));
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const res = await api.villages.getDashboardStats();
+        // The API returns id as number, convert to string for select matching if necessary
+        // Or just map them to match expected format
+        const formatted = res.map(v => ({
+          ...v,
+          id: String(v.id)
+        }));
+        setVillagesData(formatted);
+      } catch (err) {
+        console.error("Failed to load villages", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadData();
   }, []);
 
+  const kecamatans = useMemo(() => {
+    return Array.from(new Set(villagesData.map((v) => v.kecamatan)));
+  }, [villagesData]);
+
   const availableVillages = useMemo(() => {
-    if (selectedKecamatan === "all") return VILLAGES;
-    return VILLAGES.filter((v) => v.kecamatan === selectedKecamatan);
-  }, [selectedKecamatan]);
+    if (selectedKecamatan === "all") return villagesData;
+    return villagesData.filter((v) => v.kecamatan === selectedKecamatan);
+  }, [selectedKecamatan, villagesData]);
 
   const village = useMemo(() => {
     return availableVillages.find((v) => v.id === selectedVillageId) || null;
