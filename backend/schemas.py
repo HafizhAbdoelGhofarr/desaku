@@ -55,6 +55,7 @@ class IndicatorResponse(OrmBase):
     name: str
     unit: Optional[str] = None
     description: Optional[str] = None
+    weight: float
 
 # IndicatorValue
 class IndicatorValueBase(BaseModel):

@@ -10,10 +10,7 @@ kredibel, menampilkan hasilnya secara transparan ke masyarakat, dan membantu
 pengambilan keputusan pembangunan lewat rekomendasi serta simulasi dampak
 kebijakan (what-if).
 
-Karena ini project lomba dengan deadline, prioritas adalah **MVP yang bekerja
-end-to-end dan bisa didemokan**, bukan fitur yang sangat lengkap tapi belum
-jalan. Kalau ada trade-off antara "cepat selesai & bisa didemo" vs "sangat
-lengkap & idealis", pilih yang pertama, tapi tetap beri tahu di plan-nya.
+
 
 ## Siapa penggunanya dan apa yang mereka butuhkan
 - **Admin (DPMD)** — butuh kepercayaan bahwa data yang tampil itu valid.

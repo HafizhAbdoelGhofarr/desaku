@@ -78,6 +78,7 @@ class Indicator(Base):
     name = Column(String(150), nullable=False)  
     unit = Column(String(50), nullable=True)     
     description = Column(Text, nullable=True)
+    weight = Column(Float, nullable=False, default=1.0)
 
     values = relationship("IndicatorValue", back_populates="indicator")
 

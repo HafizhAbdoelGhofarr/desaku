@@ -137,6 +137,9 @@ def verify_indicator_value(
     if not val:
         raise HTTPException(status_code=404, detail="Data indikator tidak ditemukan")
     
+    if val.status != StatusVerifikasiEnum.pending:
+        raise HTTPException(status_code=400, detail="Data indikator ini sudah diverifikasi atau ditolak.")
+    
     val.status = data.status
     if data.catatan:
         val.catatan = data.catatan
